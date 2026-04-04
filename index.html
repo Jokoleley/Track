@@ -1839,6 +1839,26 @@
 
     .practice-form .form-group { margin-bottom: 16px; }
     .practice-form label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.9rem; color: var(--text); }
+    
+    /* Custom topic styling for lesson tiles */
+    .tile-label.custom-topic {
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+    
+    /* Custom lesson info in teacher view */
+    .custom-lesson-info {
+      background: rgba(102, 126, 234, 0.08);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin: 4px 0;
+      font-size: 0.85rem;
+    }
+    .custom-lesson-info strong {
+      color: var(--accent);
+    }
 
     .assessment-preview {
       background: var(--surface-2);
@@ -4761,7 +4781,7 @@
         </div>`;
 
       /* Assessment History - collapsible per sport */
-      html += '<h4 style="margin-bottom:8px;color:var(--text);">Assessment History</h4>';
+      html += '<h4 style="margin-bottom:8px;color:var(--text);">Assessment History & Lesson Progress</h4>';
       const attemptedSports = SPORTS_LIST.filter(s => sp[s.key]);
       if (attemptedSports.length === 0) {
         html += '<p style="color:var(--text-2);font-size:0.85rem;margin-bottom:16px;">No sports attempted yet.</p>';
@@ -4771,10 +4791,29 @@
           const selfAssessment = sdkLoad('assessments', compositeId);
           const teacherCompositeId = `${studentId}_${sport.key}_teacher`;
           const teacherAssessment = sdkLoad('assessments', teacherCompositeId);
-          html += `<div class="collapsible-header" data-collapse="${sport.key}">${sport.emoji} ${sport.name} <span>▼</span></div>`;
+          const sportProgress = sp[sport.key] || {};
+          const lessonsCompleted = sportProgress.lessonsCompleted || [];
+          const lessonData = sportProgress.lessonData || [];
+          
+          html += `<div class="collapsible-header" data-collapse="${sport.key}">${sport.emoji} ${sport.name} <span style="color:var(--text-2);font-size:0.8rem;font-weight:400;">（${lessonsCompleted.length}/10 lessons）</span> <span>▼</span></div>`;
           html += `<div class="collapsible-body" id="collapse_${sport.key}">`;
+          
+          /* Show practice lesson topics */
+          const customTopicLessons = [2, 3, 4, 6, 7, 8];
+          const practicsWithTopics = lessonData.filter(ld => customTopicLessons.includes(ld.lessonNum) && ld.topic);
+          if (practicsWithTopics.length > 0) {
+            html += '<p style="font-weight:600;font-size:0.8rem;margin:4px 0;">📝 Lesson Topics:</p>';
+            practicsWithTopics.forEach(lesson => {
+              let displayTopic = lesson.topic;
+              if (displayTopic.length > 35) {
+                displayTopic = displayTopic.substring(0, 32) + '...';
+              }
+              html += `<div class="custom-lesson-info">Lesson ${lesson.lessonNum}: <strong>${displayTopic}</strong></div>`;
+            });
+          }
+          
           if (selfAssessment) {
-            html += '<p style="font-weight:600;font-size:0.8rem;margin:4px 0;">Self-Assessment:</p>';
+            html += '<p style="font-weight:600;font-size:0.8rem;margin:4px 0;margin-top:8px;">Self-Assessment:</p>';
             html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">';
             (selfAssessment.skills || []).forEach(sk => {
               html += `<span style="background:var(--surface-2);padding:4px 10px;border-radius:6px;font-size:0.8rem;">${sk.skillName}: Level ${sk.level}</span>`;
@@ -7348,6 +7387,35 @@
       renderLessonGrid(sportKey);
     }
 
+    /* ---- getLessonTitle ---- */
+    function getLessonTitle(sportKey, lessonNum, student) {
+      /* Lessons with custom topic support: 2, 3, 4, 6, 7, 8 */
+      const customTopicLessons = [2, 3, 4, 6, 7, 8];
+      
+      if (!customTopicLessons.includes(lessonNum)) {
+        return `Lesson ${lessonNum} — Practice`;
+      }
+      
+      if (!student || !student.sportProgress || !student.sportProgress[sportKey]) {
+        return `Lesson ${lessonNum} — Practice`;
+      }
+      
+      const sp = student.sportProgress[sportKey];
+      const lessonData = (sp.lessonData || []).find(d => d.lessonNum === lessonNum);
+      
+      if (!lessonData || !lessonData.topic || lessonData.topic.trim() === '') {
+        return `Lesson ${lessonNum} — Practice`;
+      }
+      
+      /* Truncate to 25 characters */
+      let displayTopic = lessonData.topic.trim();
+      if (displayTopic.length > 25) {
+        displayTopic = displayTopic.substring(0, 22) + '...';
+      }
+      
+      return `Lesson ${lessonNum} — ${displayTopic}`;
+    }
+
     /* ---- renderLessonGrid ---- */
     function renderLessonGrid(sportKey) {
       const student = sdkLoad('students', currentStudentId);
@@ -7364,12 +7432,25 @@
       for (let i = 1; i <= 10; i++) {
         const isAssessment = assessmentLessons.includes(i);
         const icon = isAssessment ? '📋' : '🏃';
-        const label = isAssessment ? `Lesson ${i} — Assessment` : `Lesson ${i} — Practice`;
         const isDone = completed.includes(i);
+        
+        /* Get dynamic lesson title (custom or default) */
+        let label;
+        if (isAssessment) {
+          label = `Lesson ${i} — Assessment`;
+        } else {
+          label = getLessonTitle(sportKey, i, student);
+        }
+        
+        /* Check if lesson has custom title */
+        const customTopicLessons = [2, 3, 4, 6, 7, 8];
+        const hasCustomTitle = customTopicLessons.includes(i) && 
+          student.sportProgress[sportKey]?.lessonData?.some(d => d.lessonNum === i && d.topic);
+        
         html += `<div class="lesson-tile ${isDone ? '' : 'pending'}" onclick="openLesson('${sportKey}', ${i})">
           ${isDone ? '<span class="tile-check">✅</span>' : ''}
           <span class="tile-icon">${icon}</span>
-          <span class="tile-label">${label}</span>
+          <span class="tile-label ${hasCustomTitle ? 'custom-topic' : ''}">${label}</span>
         </div>`;
       }
 
@@ -7739,6 +7820,10 @@
       }
 
       checkAchievements(student);
+      
+      /* Refresh lesson grid to show updated custom title immediately */
+      setTimeout(() => renderLessonGrid(sportKey), 100);
+      
       backToLessonGridClick();
     }
 
