@@ -1859,6 +1859,31 @@
     .custom-lesson-info strong {
       color: var(--accent);
     }
+    
+    /* Last Connection styling */
+    .student-last-connection {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    
+    /* Inactive alert (7+ days) - red styling */
+    .student-list-item .student-last-connection[style*="color: var(--error"] {
+      animation: pulse-red 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* Mobile responsiveness for Last Connection */
+    @media (max-width: 768px) {
+      .student-last-connection {
+        font-size: 0.7rem;
+      }
+    }
 
     .assessment-preview {
       background: var(--surface-2);
@@ -3397,6 +3422,31 @@
       const days = Math.round(hours / 24);
       return `${days} day${days > 1 ? 's' : ''} ago`;
     }
+    
+    /* ---- getRelativeTime (for teacher view display) ---- */
+    function getRelativeTime(isoTimestamp) {
+      if (!isoTimestamp) return 'Never logged in';
+      
+      const lastTime = new Date(isoTimestamp);
+      const now = new Date();
+      const diffMs = now - lastTime;
+      const diffMins = Math.round(diffMs / 1000 / 60);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min ago`;
+      
+      const diffHours = Math.round(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      
+      const diffDays = Math.round(diffHours / 24);
+      if (diffDays < 30) return `${diffDays}d ago`;
+      
+      const diffWeeks = Math.round(diffDays / 7);
+      if (diffWeeks < 4) return `${diffWeeks}w ago`;
+      
+      const diffMonths = Math.round(diffDays / 30);
+      return `${diffMonths}mo ago`;
+    }
 
     function isStudentOnline(studentId, thresholdMinutes = 30) {
       const student = sdkLoad('students', studentId);
@@ -4626,6 +4676,11 @@
           <option value="hpDesc">HP high → low</option>
           <option value="hpAsc">HP low → high</option>
         </select>
+        <select id="tSortLastConnection">
+          <option value="">Last Connection</option>
+          <option value="mostRecent">⏰ Most Recent</option>
+          <option value="leastRecent">⏰ Least Recent</option>
+        </select>
         <select id="tFilterHouse">
           <option value="">All Houses</option>
           <option value="Yellow">Yellow</option>
@@ -4684,12 +4739,28 @@
         } else if (sortVal === 'hpAsc') {
           filtered = filtered.slice().sort((a, b) => (a.housePoints || 0) - (b.housePoints || 0));
         }
+        
+        const lastConnVal = document.getElementById('tSortLastConnection').value;
+        if (lastConnVal === 'mostRecent') {
+          filtered = filtered.slice().sort((a, b) => {
+            const aTime = a.lastActiveTimestamp ? new Date(a.lastActiveTimestamp).getTime() : 0;
+            const bTime = b.lastActiveTimestamp ? new Date(b.lastActiveTimestamp).getTime() : 0;
+            return bTime - aTime;
+          });
+        } else if (lastConnVal === 'leastRecent') {
+          filtered = filtered.slice().sort((a, b) => {
+            const aTime = a.lastActiveTimestamp ? new Date(a.lastActiveTimestamp).getTime() : 0;
+            const bTime = b.lastActiveTimestamp ? new Date(b.lastActiveTimestamp).getTime() : 0;
+            return aTime - bTime;
+          });
+        }
         renderStudentList(filtered, pendingStudentIds);
       };
 
       document.getElementById('tFilterYear').addEventListener('change', applyFilters);
       document.getElementById('tFilterClass').addEventListener('change', applyFilters);
       document.getElementById('tSortHP').addEventListener('change', applyFilters);
+      document.getElementById('tSortLastConnection').addEventListener('change', applyFilters);
       document.getElementById('tFilterHouse').addEventListener('change', applyFilters);
       document.getElementById('tFilterGender').addEventListener('change', applyFilters);
       document.getElementById('tFilterSearch').addEventListener('input', applyFilters);
@@ -4721,11 +4792,27 @@
         const hp = s.housePoints || 0;
         const lessons = s.lessonsDone || 0;
         const isPending = pendingStudentIds && pendingStudentIds.has(s._id);
+        
+        /* Last Connection tracking */
+        let lastConnDisplay = 'Never logged in';
+        let isInactive = false;
+        if (s.lastActiveTimestamp) {
+          lastConnDisplay = getRelativeTime(s.lastActiveTimestamp);
+          /* Check if inactive (7+ days) */
+          const lastTime = new Date(s.lastActiveTimestamp);
+          const now = new Date();
+          const daysDiff = (now - lastTime) / (1000 * 60 * 60 * 24);
+          isInactive = daysDiff >= 7;
+        }
+        
+        const lastConnStyle = isInactive ? 'color: var(--error, #ff4444); font-weight: 600;' : '';
+        
         return `<div class="student-list-item" data-student-id="${s._id}">
           <img class="student-photo" src="${photo}" alt="${fullName}">
           <div class="student-info">
             <div class="student-name">${fullName}</div>
             <div class="student-meta">${s.classGrade || ''} · <span style="color:${getHouseColor(s.house)}">${s.house}</span> · ${hp} HP · ${lessons} lessons</div>
+            <div class="student-last-connection" style="${lastConnStyle}">🕐 Last active: ${lastConnDisplay}</div>
           </div>
           ${isPending ? '<span class="pending-tag">Pending</span>' : ''}
         </div>`;
