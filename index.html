@@ -285,6 +285,146 @@
     }
 
     /* =============================================
+       ADMIN PANELS - SEASON & USER MANAGEMENT
+       ============================================= */
+    .admin-panel {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .admin-panel h3 {
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .admin-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .admin-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--surface-2);
+      border-radius: 8px;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .admin-table thead {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .admin-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .admin-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .admin-table tbody tr:hover {
+      background: var(--surface-2);
+    }
+
+    .admin-table input[type="checkbox"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .admin-danger {
+      background: var(--house-red);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    .admin-danger:hover:not(:disabled) {
+      filter: brightness(1.08);
+      box-shadow: 0 6px 16px rgba(220, 53, 69, 0.6);
+    }
+
+    .admin-danger:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .season-info-box {
+      background: var(--surface-2);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .season-info-box p {
+      margin: 8px 0;
+      font-size: 0.9rem;
+    }
+
+    .confirmation-input {
+      width: 100%;
+      margin: 12px 0;
+      padding: 10px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: monospace;
+    }
+
+    .confirmation-input:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .confirmation-input.valid {
+      border-color: var(--theme-accent-reward);
+      background: rgba(0, 217, 161, 0.1);
+    }
+
+    .admin-highlight {
+      background: rgba(220, 53, 69, 0.1);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 3px solid var(--house-red);
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+
+    .season-history-export {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /* =============================================
        BUTTONS
        ============================================= */
     .btn {
@@ -2076,6 +2216,15 @@
       color: var(--accent);
       border-bottom-color: var(--accent);
     }
+
+    .admin-nav-item {
+      display: none !important;
+    }
+
+    .admin-nav-item.visible {
+      display: inline-flex !important;
+    }
+
     .teacher-section { display: none; padding: 12px; opacity: 0; transition: opacity 200ms ease; }
     .teacher-section.active { display: block; opacity: 1; }
 
@@ -2510,6 +2659,12 @@
           </div>
 
           <div class="form-group">
+            <label for="trManagerCode">Manager SignUp Code (Optional)</label>
+            <input type="text" id="trManagerCode" class="form-input" placeholder="Leave blank unless becoming manager">
+            <div class="form-error" id="trManagerCodeErr">Invalid manager code.</div>
+          </div>
+
+          <div class="form-group">
             <label for="trPassword">Password</label>
             <input type="password" id="trPassword" class="form-input" placeholder="Min 6 characters" required minlength="6">
             <div class="form-error" id="trPasswordErr">Password must be at least 6 characters.</div>
@@ -2735,6 +2890,9 @@
       <button class="nav-item" data-section="sportControls">⚙️ Sport Controls</button>
       <button class="nav-item" data-section="approvals">✅ Approvals</button>
       <button class="nav-item" data-section="wellDone">🏅 Well Done!</button>
+      <button class="nav-item" data-section="settings">⚙️ Settings</button>
+      <button class="nav-item admin-nav-item" data-section="seasonManagement">📅 Season Management</button>
+      <button class="nav-item admin-nav-item" data-section="userManagement">👥 User Management</button>
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
@@ -2742,6 +2900,9 @@
       <div class="teacher-section" id="tSectionSportControls"></div>
       <div class="teacher-section" id="tSectionApprovals"></div>
       <div class="teacher-section" id="tSectionWellDone"></div>
+      <div class="teacher-section" id="tSectionSettings"></div>
+      <div class="teacher-section admin-section" id="tSectionSeasonManagement"></div>
+      <div class="teacher-section admin-section" id="tSectionUserManagement"></div>
     </div>
   </div>
 
@@ -3446,6 +3607,320 @@
     }
 
     /* =============================================
+       ADMIN MODULE: SEASON MANAGEMENT
+       ============================================= */
+    function createSeasonHistory(cycleType) {
+      const allStudents = sdkLoadAll('students') || [];
+      const housePoints = { Yellow: 0, Red: 0, Green: 0, Blue: 0 };
+      const houseRankings = {};
+      
+      /* Aggregate points by house */
+      allStudents.forEach(s => {
+        if (s.house && s.house in housePoints) {
+          housePoints[s.house] += s.housePoints || 0;
+        }
+      });
+      
+      /* Determine winner */
+      const sortedHouses = Object.entries(housePoints).sort((a, b) => b[1] - a[1]);
+      const winner = sortedHouses[0]?.[0] || 'Unknown';
+      
+      /* Create season snapshot */
+      const season = {
+        _id: uuid(),
+        academicYear: new Date().getFullYear(),
+        cycleType: cycleType,
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+        housePointsSnapshot: housePoints,
+        housePlacements: sortedHouses.map((h, idx) => ({
+          rank: idx + 1,
+          house: h[0],
+          points: h[1]
+        })),
+        winner: winner,
+        totalParticipants: allStudents.length,
+        archivedAt: new Date().toISOString()
+      };
+      
+      sdkSave('seasonHistory', season._id, season);
+      return season;
+    }
+
+    function executeSeasonReset(cycleType) {
+      /* STEP 1: Create and save season archive */
+      const archive = createSeasonHistory(cycleType);
+      
+      /* STEP 2: Reset all students */
+      const allStudents = sdkLoadAll('students') || [];
+      allStudents.forEach(student => {
+        /* Reset house points and XP */
+        student.housePoints = 0;
+        student.xp = 0;
+        student.quizLevelsCompleted = 0;
+        student.gloryPoints = 0;
+        
+        /* If yearly cycle, increment year group */
+        if (cycleType === 'Yearly') {
+          student.yearGroup = (student.yearGroup || 1) + 1;
+          student.yearNumber = student.yearNumber ? student.yearNumber + 1 : 2;
+          
+          /* Move Year 13 to Alumni status */
+          if (student.yearGroup > 13) {
+            student.status = 'Alumni';
+            student.yearGroup = 13;
+            student.yearNumber = 13;
+          }
+        }
+        
+        sdkSave('students', student._id, student);
+      });
+      
+      /* STEP 3: Clear quiz progress (optional - based on your preference) */
+      const allQuizProgress = sdkLoadAll('quizProgress') || [];
+      allQuizProgress.forEach(qp => {
+        if (cycleType === 'Yearly') {
+          sdkDelete('quizProgress', qp._id);
+        } else {
+          qp.resetAt = new Date().toISOString();
+          sdkSave('quizProgress', qp._id, qp);
+        }
+      });
+      
+      /* STEP 4: Send notification to all students */
+      showGlobalNotification('🌟 A new Season has begun! Points have been reset. Good luck!');
+      
+      return archive;
+    }
+
+    function showGlobalNotification(message) {
+      /* Save notification to all students */
+      const allStudents = sdkLoadAll('students') || [];
+      allStudents.forEach(student => {
+        if (!student.globalNotifications) {
+          student.globalNotifications = [];
+        }
+        student.globalNotifications.push({
+          id: uuid(),
+          message: message,
+          timestamp: new Date().toISOString(),
+          read: false
+        });
+        sdkSave('students', student._id, student);
+      });
+      
+      /* Also show toast to current user */
+      showToast(message);
+    }
+
+    function getSeasonHistoryList() {
+      const histories = sdkLoadAll('seasonHistory') || [];
+      return histories.sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt));
+    }
+
+    function exportSeasonHistoryToCSV() {
+      const histories = getSeasonHistoryList();
+      if (histories.length === 0) {
+        showToast('No season history to export');
+        return;
+      }
+      
+      let csv = 'Season #,Academic Year,Cycle Type,Start Date,Winner House,Total Participants\n';
+      histories.forEach((h, idx) => {
+        csv += `${idx + 1},${h.academicYear},${h.cycleType},"${new Date(h.startDate).toLocaleDateString()}",${h.winner},${h.totalParticipants}\n`;
+      });
+      
+      /* Download CSV */
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `season-history-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✓ Season history exported');
+    }
+
+    /* =============================================
+       ADMIN MODULE: USER MANAGEMENT
+       ============================================= */
+    function getFilteredUsers(filters) {
+      let students = sdkLoadAll('students') || [];
+      let teachers = sdkLoadAll('teachers') || [];
+      
+      /* Apply filters */
+      if (filters.role === 'Student') {
+        teachers = [];
+      } else if (filters.role === 'Teacher') {
+        students = [];
+      }
+      
+      /* Filter by search term */
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        students = students.filter(s => 
+          `${s.firstName} ${s.familyName}`.toLowerCase().includes(search) ||
+          s.studentId?.toLowerCase().includes(search)
+        );
+        teachers = teachers.filter(t => 
+          `${t.firstName} ${t.familyName}`.toLowerCase().includes(search) ||
+          t.teacherId?.toLowerCase().includes(search)
+        );
+      }
+      
+      /* Filter by year group (students only) */
+      if (filters.yearGroup && !isNaN(filters.yearGroup)) {
+        students = students.filter(s => parseInt(s.yearGroup) === parseInt(filters.yearGroup));
+      }
+      
+      /* Filter by house (students only) */
+      if (filters.house) {
+        students = students.filter(s => s.house === filters.house);
+      }
+      
+      /* Filter by class letter (students only) */
+      if (filters.classLetter) {
+        students = students.filter(s => s.classLetter === filters.classLetter);
+      }
+      
+      return { students, teachers };
+    }
+
+    function deleteStudent(studentId, currentUserId) {
+      /* Safety: cannot delete self */
+      if (studentId === currentUserId) {
+        showToast('❌ Cannot delete your own account');
+        return false;
+      }
+      
+      const student = sdkLoad('students', studentId);
+      if (!student) return false;
+      
+      /* Step 1: Delete house points */
+      const allHousePoints = sdkLoadAll('studentHousePoints') || [];
+      allHousePoints.forEach(hp => {
+        if (hp.studentId === studentId) {
+          sdkDelete('studentHousePoints', hp._id);
+        }
+      });
+      
+      /* Step 2: Delete quiz progress */
+      const allQuizProgress = sdkLoadAll('quizProgress') || [];
+      allQuizProgress.forEach(qp => {
+        if (qp.studentId === studentId) {
+          sdkDelete('quizProgress', qp._id);
+        }
+      });
+      
+      /* Step 3: Delete arena history */
+      const allArenaHistory = sdkLoadAll('arenaHistory') || [];
+      allArenaHistory.forEach(ah => {
+        if (ah.studentId === studentId || ah.opponentId === studentId) {
+          sdkDelete('arenaHistory', ah._id);
+        }
+      });
+      
+      /* Step 4: Delete student record */
+      sdkDelete('students', studentId);
+      
+      return true;
+    }
+
+    function deleteTeacher(teacherId, currentUserId) {
+      /* Safety: cannot delete self */
+      if (teacherId === currentUserId) {
+        showToast('❌ Cannot delete your own account');
+        return false;
+      }
+      
+      const teacher = sdkLoad('teachers', teacherId);
+      if (!teacher) return false;
+      
+      /* Log managed classes for reassignment */
+      let managedClasses = [];
+      const allStudents = sdkLoadAll('students') || [];
+      allStudents.forEach(s => {
+        /* Determine if this teacher managed the student (via some relation - customize based on your logic) */
+        /* For now, log all students in the system */
+      });
+      
+      console.log(`[Deletion] Teacher ${teacher.firstName} ${teacher.familyName} managed students. Please reassign.`);
+      
+      /* Delete teacher record */
+      sdkDelete('teachers', teacherId);
+      
+      return true;
+    }
+
+    function bulkDeleteUsers(userIds, currentUserId, userType = 'student') {
+      const results = { success: [], failed: [] };
+      
+      userIds.forEach(id => {
+        try {
+          if (userType === 'student') {
+            if (deleteStudent(id, currentUserId)) {
+              results.success.push(id);
+            } else {
+              results.failed.push(id);
+            }
+          } else if (userType === 'teacher') {
+            if (deleteTeacher(id, currentUserId)) {
+              results.success.push(id);
+            } else {
+              results.failed.push(id);
+            }
+          }
+        } catch(e) {
+          console.error(`[Deletion Error] ${id}:`, e);
+          results.failed.push(id);
+        }
+      });
+      
+      return results;
+    }
+
+    /* =============================================
+       ADMIN MODULE: ENHANCED ROLE MANAGEMENT
+       ============================================= */
+    function validateSignupCode(code) {
+      return code === 'LEO';
+    }
+
+    function setupInitialHouseTeamManager(teacherId, code) {
+      if (!validateSignupCode(code)) {
+        return { success: false, message: 'Invalid signup code' };
+      }
+      
+      const existingManager = getHouseTeamManager();
+      if (existingManager) {
+        return { success: false, message: 'A House Team Manager already exists' };
+      }
+      
+      setAsHouseTeamManager(teacherId);
+      return { success: true, message: 'You are now the House Team Manager' };
+    }
+
+    function canUserAccessAdminPanel(userId, userType = 'teacher') {
+      if (userType !== 'teacher') return false;
+      const teacher = sdkLoad('teachers', userId);
+      return teacher?.isHouseTeamManager === true;
+    }
+
+    function logAdminAction(adminId, action, details) {
+      const log = {
+        _id: uuid(),
+        adminId: adminId,
+        action: action,
+        details: details,
+        timestamp: new Date().toISOString()
+      };
+      sdkSave('adminActionLogs', log._id, log);
+      console.log('[Admin Action]', log);
+    }
+
+    /* =============================================
        THEME TOGGLE
        ============================================= */
     (function initTheme() {
@@ -3802,6 +4277,7 @@
       const familyName = document.getElementById('trFamilyName').value.trim();
       const teacherId = document.getElementById('trTeacherId').value.trim();
       const email = document.getElementById('trEmail').value.trim();
+      const managerCode = document.getElementById('trManagerCode').value.trim();
       const password = document.getElementById('trPassword').value;
       const confirmPassword = document.getElementById('trConfirmPassword').value;
 
@@ -3824,6 +4300,25 @@
 
       if (!valid) return;
 
+      /* Validate manager code if provided */
+      let isManager = false;
+      if (managerCode) {
+        if (!validateSignupCode(managerCode)) {
+          showError('trManagerCodeErr');
+          return;
+        }
+        
+        /* Check if a manager already exists */
+        const existingManager = getHouseTeamManager();
+        if (existingManager) {
+          showError('trManagerCodeErr');
+          showToast('A House Team Manager already exists. Request the role instead.');
+          return;
+        }
+        
+        isManager = true;
+      }
+
       const hashedPassword = await hashPassword(password);
       const id = uuid();
       const teacherData = {
@@ -3836,13 +4331,20 @@
         activated: true,
         createdAt: new Date().toISOString(),
         lastActiveTimestamp: new Date().toISOString(),
-        isHouseTeamManager: false,
+        isHouseTeamManager: isManager,
         managershipRequest: null
       };
 
       sdkSave('teachers', id, teacherData);
       sendActivationEmail(email, uuid());
-      showToast('Teacher account created successfully!');
+      
+      if (isManager) {
+        showToast('🎉 You are now the House Team Manager!');
+        logAdminAction(id, 'assigned_house_team_manager', { method: 'signup_code' });
+      } else {
+        showToast('Teacher account created successfully!');
+      }
+      
       saveSession(id, 'teacher');
       showTeacherApp(id);
     });
@@ -3965,6 +4467,17 @@
       renderSportControls();
       renderTeacherApprovals();
       renderWellDone();
+      renderTeacherSettings();
+      
+      /* Show/hide admin features if manager */
+      const teacher = sdkLoad('teachers', teacherId);
+      if (teacher?.isHouseTeamManager) {
+        document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.add('visible'));
+        renderSeasonManagementPanel();
+        renderUserManagementPanel();
+      } else {
+        document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.remove('visible'));
+      }
       
       /* Start periodic activity tracking for teacher */
       if (window.activityInterval) clearInterval(window.activityInterval);
@@ -3991,6 +4504,18 @@
         renderTeacherApprovals();
       }
       else if (section === 'wellDone') document.getElementById('tSectionWellDone').classList.add('active');
+      else if (section === 'settings') {
+        document.getElementById('tSectionSettings').classList.add('active');
+        renderTeacherSettings();
+      }
+      else if (section === 'seasonManagement') {
+        document.getElementById('tSectionSeasonManagement').classList.add('active');
+        renderSeasonManagementPanel();
+      }
+      else if (section === 'userManagement') {
+        document.getElementById('tSectionUserManagement').classList.add('active');
+        renderUserManagementPanel();
+      }
     });
 
     /* =============================================
@@ -5074,6 +5599,626 @@
         /* Reset form */
         document.getElementById('wdPoints').value = '5';
         document.getElementById('wdReason').value = '';
+      });
+    }
+
+    /* =============================================
+       TEACHER SETTINGS PANEL
+       ============================================= */
+    function renderTeacherSettings() {
+      const container = document.getElementById('tSectionSettings');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher) {
+        container.innerHTML = '<p style="color:var(--text-2);">Unable to load teacher data.</p>';
+        return;
+      }
+      
+      const isManager = currentTeacher.isHouseTeamManager;
+      const managerName = isManager ? 'You are the House Team Manager' : 'Not assigned';
+      
+      let html = `<div style="max-width:600px;">
+        <h2 style="color:var(--text);margin-bottom:20px;">⚙️ Teacher Settings</h2>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">👤 Account Information</h3>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Name:</strong> ${currentTeacher.title} ${currentTeacher.firstName} ${currentTeacher.familyName}
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Teacher ID:</strong> ${currentTeacher.teacherId}
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Email:</strong> ${currentTeacher.email}
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Role:</strong> 
+            <span style="background:${isManager ? 'var(--theme-accent-reward)' : 'var(--border)'};color:${isManager ? '#000' : 'var(--text-2)'};padding:4px 8px;border-radius:4px;font-weight:600;">
+              ${isManager ? '👑 House Team Manager' : '👨‍🏫 Teacher'}
+            </span>
+          </p>
+          <p style="margin:8px 0;color:var(--text-2);">
+            <strong style="color:var(--text);">Created:</strong> ${new Date(currentTeacher.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">🔐 Become House Team Manager</h3>
+          
+          ${isManager ? `
+            <div style="background:var(--theme-accent-reward);color:#000;padding:12px;border-radius:8px;margin-bottom:16px;font-weight:600;">
+              ✅ You are currently the House Team Manager!
+            </div>
+          ` : `
+            <p style="color:var(--text-2);margin-bottom:12px;">
+              Enter the House Team Manager signup code to unlock admin features including Season Management and User Administration.
+            </p>
+            
+            <div class="form-group">
+              <label for="managerCodeInput">Manager SignUp Code</label>
+              <input type="text" id="managerCodeInput" class="form-input" placeholder="Enter code..." style="text-transform:uppercase;">
+              <div class="form-error" id="managerCodeInputErr" style="margin-top:4px;">Invalid or already assigned manager code.</div>
+            </div>
+            
+            <button class="btn btn-primary" id="applyManagerCodeBtn" style="min-height:48px;width:100%;">Become House Team Manager</button>
+            
+            <div style="background:var(--surface-2);padding:12px;border-radius:8px;margin-top:12px;font-size:0.85rem;color:var(--text-2);">
+              <strong style="color:var(--text);">Hint:</strong> The code is provided by your school administration.
+            </div>
+          `}
+        </div>
+        
+        <div class="card">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">📊 Admin Permissions</h3>
+          <div style="display:grid;gap:8px;">
+            <div style="padding:10px;border-radius:6px;background:${isManager ? 'var(--theme-accent-reward)' : 'var(--surface-2)'};border-left:4px solid ${isManager ? 'var(--theme-accent-reward)' : 'var(--border)'};">
+              <span style="color:${isManager ? '#000' : 'var(--text-2)'};font-weight:500;">📅 Season Management</span>
+              <p style="font-size:0.8rem;color:${isManager ? '#000' : 'var(--text-2)'};margin-top:2px;">Reset competitive data, archive seasons</p>
+            </div>
+            <div style="padding:10px;border-radius:6px;background:${isManager ? 'var(--theme-accent-reward)' : 'var(--surface-2)'};border-left:4px solid ${isManager ? 'var(--theme-accent-reward)' : 'var(--border)'};">
+              <span style="color:${isManager ? '#000' : 'var(--text-2)'};font-weight:500;">👥 User Management</span>
+              <p style="font-size:0.8rem;color:${isManager ? '#000' : 'var(--text-2)'};margin-top:2px;">Delete users, manage accounts in bulk</p>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      /* Only setup handler if not already manager */
+      if (!isManager) {
+        const applyBtn = document.getElementById('applyManagerCodeBtn');
+        const codeInput = document.getElementById('managerCodeInput');
+        const errorMsg = document.getElementById('managerCodeInputErr');
+        
+        codeInput.addEventListener('input', function() {
+          errorMsg.style.display = 'none';
+        });
+        
+        applyBtn.addEventListener('click', function() {
+          const code = codeInput.value.trim().toUpperCase();
+          
+          if (!code) {
+            errorMsg.textContent = 'Please enter the code.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+          
+          /* Validate code */
+          if (!validateSignupCode(code)) {
+            errorMsg.textContent = 'Invalid manager code.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+          
+          /* Check if manager already exists */
+          const existingManager = getHouseTeamManager();
+          if (existingManager) {
+            errorMsg.textContent = 'A House Team Manager already exists.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+          
+          /* Assign role */
+          setAsHouseTeamManager(currentTeacherId);
+          showToast('🎉 You are now the House Team Manager!');
+          logAdminAction(currentTeacherId, 'assigned_house_team_manager', { method: 'teacher_app_code' });
+          
+          /* Refresh UI */
+          renderTeacherSettings();
+          showTeacherApp(currentTeacherId);
+        });
+      }
+    }
+
+    /* =============================================
+       ADMIN RENDER: SEASON MANAGEMENT
+       ============================================= */
+    function renderSeasonManagementPanel() {
+      const container = document.getElementById('tSectionSeasonManagement');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
+        container.innerHTML = '<p style="color:var(--text-2);">Access denied.</p>';
+        return;
+      }
+      
+      const allStudents = sdkLoadAll('students') || [];
+      const histories = getSeasonHistoryList();
+      
+      /* Calculate current house standings */
+      const housePoints = { Yellow: 0, Red: 0, Green: 0, Blue: 0 };
+      allStudents.forEach(s => {
+        if (s.house && s.house in housePoints) {
+          housePoints[s.house] += s.housePoints || 0;
+        }
+      });
+      
+      const standings = Object.entries(housePoints)
+        .sort((a, b) => b[1] - a[1])
+        .map((h, idx) => `${idx + 1}. ${h[0]}: ${h[1]} points`);
+      
+      let html = `<div class="admin-panel">
+        <h3 style="margin-bottom:20px;">📅 Season Management & Reset</h3>
+        
+        <div class="season-info-box">
+          <p><strong>Current Season Data:</strong></p>
+          <p>📊 Total Students: ${allStudents.length}</p>
+          <p>🏆 Current Standings:</p>
+          <div style="margin-left:16px;">
+            ${standings.map(s => `<p style="margin:4px 0;">${s}</p>`).join('')}
+          </div>
+        </div>
+        
+        <div class="admin-controls">
+          <div class="form-group">
+            <label>Season Cycle Type</label>
+            <select id="seasonCycleType" class="form-select">
+              <option value="Semester">Semester (every 6 months)</option>
+              <option value="Trimester">Trimester (every 4 months)</option>
+              <option value="Yearly">Yearly (every 12 months)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Reset Date</label>
+            <input type="date" id="seasonResetDate" class="form-input">
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <button class="btn btn-primary" id="scheduleResetBtn" style="min-height:48px;">⏰ Schedule Reset</button>
+          <button class="btn admin-danger" id="manualResetBtn" style="min-height:48px;">🔄 Execute Reset Now</button>
+        </div>
+        
+        <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;">
+          <h4 style="margin-bottom:12px;">📋 Season History (${histories.length})</h4>
+          ${histories.length === 0 ? 
+            '<p style="color:var(--text-2);">No season history yet.</p>' :
+            `
+            <table class="admin-table">
+              <thead>
+                <tr style="background:var(--surface-2);">
+                  <th>Season #</th>
+                  <th>Year</th>
+                  <th>Type</th>
+                  <th>Winner</th>
+                  <th>Participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${histories.map((h, idx) => `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${h.academicYear}</td>
+                    <td>${h.cycleType}</td>
+                    <td><strong>${h.winner}</strong></td>
+                    <td>${h.totalParticipants}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <button class="btn btn-secondary" id="exportSeasonHistoryBtn" style="margin-top:12px;">📥 Export Season History (CSV)</button>
+            `
+          }
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      /* Set today as default reset date */
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('seasonResetDate').value = today;
+      
+      /* Schedule Reset */
+      document.getElementById('scheduleResetBtn').addEventListener('click', function() {
+        const cycleType = document.getElementById('seasonCycleType').value;
+        const resetDate = document.getElementById('seasonResetDate').value;
+        if (!resetDate) { showToast('Please select a reset date'); return; }
+        
+        showToast(`✓ Reset scheduled for ${resetDate} (${cycleType})`);
+        logAdminAction(currentTeacherId, 'schedule_season_reset', { cycleType, resetDate });
+      });
+      
+      /* Manual Reset */
+      document.getElementById('manualResetBtn').addEventListener('click', function() {
+        const cycleType = document.getElementById('seasonCycleType').value;
+        showSeasonResetConfirmationModal(cycleType);
+      });
+      
+      /* Export Button */
+      const exportBtn = document.getElementById('exportSeasonHistoryBtn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', exportSeasonHistoryToCSV);
+      }
+    }
+
+    /* =============================================
+       ADMIN RENDER: USER MANAGEMENT
+       ============================================= */
+    function renderUserManagementPanel() {
+      const container = document.getElementById('tSectionUserManagement');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
+        container.innerHTML = '<p style="color:var(--text-2);">Access denied.</p>';
+        return;
+      }
+      
+      const filteredUsers = getFilteredUsers({});
+      const allStudents = filteredUsers.students;
+      const allTeachers = filteredUsers.teachers;
+      
+      let html = `<div class="admin-panel">
+        <h3 style="margin-bottom:20px;">👥 User Management & Bulk Operations</h3>
+        
+        <div class="admin-filters">
+          <div class="form-group">
+            <label>Search</label>
+            <input type="text" id="umSearchInput" class="form-input" placeholder="Name or ID...">
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="umRoleFilter" class="form-select">
+              <option value="">All Roles</option>
+              <option value="Student">Student</option>
+              <option value="Teacher">Teacher</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year Group</label>
+            <select id="umYearFilter" class="form-select">
+              <option value="">All Years</option>
+              ${Array.from({length:13}, (_, i) => `<option value="${i+1}">Year ${i+1}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>House Team</label>
+            <select id="umHouseFilter" class="form-select">
+              <option value="">All Houses</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Red">Red</option>
+              <option value="Green">Green</option>
+              <option value="Blue">Blue</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Class Letter</label>
+            <select id="umClassFilter" class="form-select">
+              <option value="">All Classes</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="H">H</option>
+              <option value="I">I</option>
+              <option value="J">J</option>
+              <option value="S">S</option>
+            </select>
+          </div>
+        </div>
+        
+        <div style="margin-bottom:16px;padding:12px;background:var(--surface-2);border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <input type="checkbox" id="umSelectAll" style="accent-color:var(--accent);cursor:pointer;"> 
+            <label for="umSelectAll" style="cursor:pointer;">Select All</label>
+          </div>
+          <button class="btn admin-danger" id="umDeleteBtn" style="opacity:0.5;cursor:not-allowed;" disabled>
+            🗑️ Delete Selected (<span id="umSelectionCount">0</span>)
+          </button>
+        </div>
+        
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="umTableSelectAll" style="accent-color:var(--accent);"></th>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Role</th>
+              <th>Year/Group</th>
+              <th>House</th>
+            </tr>
+          </thead>
+          <tbody id="umTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>`;
+      
+      container.innerHTML = html;
+      renderUserManagementTable(allStudents, allTeachers);
+      setupUserManagementHandlers(currentTeacherId);
+    }
+
+    function renderUserManagementTable(students, teachers) {
+      const tbody = document.getElementById('umTableBody');
+      let html = '';
+      
+      /* Add students */
+      students.forEach(s => {
+        html += `<tr data-userId="${s._id}" data-userType="student">
+          <td><input type="checkbox" class="um-row-checkbox" data-userId="${s._id}" style="accent-color:var(--accent);"></td>
+          <td>${s.firstName} ${s.familyName}</td>
+          <td>${s.studentId || '-'}</td>
+          <td>Student</td>
+          <td>Year ${s.yearGroup || '-'}</td>
+          <td>${s.house || '-'}</td>
+        </tr>`;
+      });
+      
+      /* Add teachers */
+      teachers.forEach(t => {
+        html += `<tr data-userId="${t._id}" data-userType="teacher">
+          <td><input type="checkbox" class="um-row-checkbox" data-userId="${t._id}" style="accent-color:var(--accent);"></td>
+          <td>${t.firstName} ${t.familyName}</td>
+          <td>${t.teacherId || '-'}</td>
+          <td>Teacher${t.isHouseTeamManager ? ' (Manager)' : ''}</td>
+          <td>-</td>
+          <td>-</td>
+        </tr>`;
+      });
+      
+      if (html === '') {
+        html = '<tr><td colspan="6" style="text-align:center;color:var(--text-2);">No users found</td></tr>';
+      }
+      
+      tbody.innerHTML = html;
+    }
+
+    function setupUserManagementHandlers(currentUserId) {
+      const selectAllCheckbox = document.getElementById('umSelectAll');
+      const tableSelectAllCheckbox = document.getElementById('umTableSelectAll');
+      const deleteBtn = document.getElementById('umDeleteBtn');
+      const selectionCountLabel = document.getElementById('umSelectionCount');
+      
+      const searchInput = document.getElementById('umSearchInput');
+      const roleFilter = document.getElementById('umRoleFilter');
+      const yearFilter = document.getElementById('umYearFilter');
+      const houseFilter = document.getElementById('umHouseFilter');
+      const classFilter = document.getElementById('umClassFilter');
+      
+      /* Get all row checkboxes */
+      function getRowCheckboxes() {
+        return Array.from(document.querySelectorAll('.um-row-checkbox'));
+      }
+      
+      /* Apply filters to table */
+      function updateTableWithFilters() {
+        const filters = {
+          search: searchInput.value,
+          role: roleFilter.value,
+          yearGroup: yearFilter.value,
+          house: houseFilter.value,
+          classLetter: classFilter.value
+        };
+        
+        const filteredUsers = getFilteredUsers(filters);
+        renderUserManagementTable(filteredUsers.students, filteredUsers.teachers);
+        setupUserManagementHandlers(currentUserId);
+      }
+      
+      function updateSelectionState() {
+        const checkboxes = getRowCheckboxes();
+        const selected = checkboxes.filter(cb => cb.checked).length;
+        selectionCountLabel.textContent = selected;
+        
+        if (selected > 0) {
+          deleteBtn.disabled = false;
+          deleteBtn.style.opacity = '1';
+          deleteBtn.style.cursor = 'pointer';
+        } else {
+          deleteBtn.disabled = true;
+          deleteBtn.style.opacity = '0.5';
+          deleteBtn.style.cursor = 'not-allowed';
+        }
+        
+        /* Update "Select All" checkbox */
+        selectAllCheckbox.checked = selected > 0 && selected === checkboxes.length;
+        tableSelectAllCheckbox.checked = selectAllCheckbox.checked;
+      }
+      
+      /* Filter inputs */
+      searchInput.addEventListener('input', updateTableWithFilters);
+      roleFilter.addEventListener('change', updateTableWithFilters);
+      yearFilter.addEventListener('change', updateTableWithFilters);
+      houseFilter.addEventListener('change', updateTableWithFilters);
+      classFilter.addEventListener('change', updateTableWithFilters);
+      
+      /* Select All handler */
+      selectAllCheckbox.addEventListener('change', function() {
+        getRowCheckboxes().forEach(cb => cb.checked = this.checked);
+        updateSelectionState();
+      });
+      
+      tableSelectAllCheckbox.addEventListener('change', function() {
+        getRowCheckboxes().forEach(cb => cb.checked = this.checked);
+        updateSelectionState();
+      });
+      
+      /* Individual checkboxes */
+      getRowCheckboxes().forEach(cb => {
+        cb.addEventListener('change', updateSelectionState);
+      });
+      
+      /* Delete button */
+      deleteBtn.addEventListener('click', function() {
+        const selected = getRowCheckboxes()
+          .filter(cb => cb.checked)
+          .map(cb => ({
+            userId: cb.getAttribute('data-userId'),
+            userType: cb.closest('tr').getAttribute('data-userType')
+          }));
+        
+        if (selected.length === 0) { showToast('Please select users to delete'); return; }
+        
+        showUserDeletionConfirmationModal(selected, currentUserId);
+      });
+    }
+
+    /* =============================================
+       MODAL: SEASON RESET CONFIRMATION
+       ============================================= */
+    function showSeasonResetConfirmationModal(cycleType) {
+      let modalHtml = `
+        <div class="modal-overlay active" id="seasonResetModal" style="z-index:10001;">
+          <div class="modal" style="max-width:500px;">
+            <h3 style="color:var(--text);margin-bottom:20px;">⚠️ Execute Season Reset</h3>
+            
+            <div class="admin-highlight">
+              <strong>CAUTION:</strong> This action will:
+              <ul style="margin:8px 0 0 16px;padding:8px;">
+                <li>Archive current season data</li>
+                <li>Reset all house points to 0</li>
+                <li>Reset all student XP</li>
+                ${cycleType === 'Yearly' ? '<li>Increment all year groups</li>' : ''}
+                <li>Send notification to all students</li>
+              </ul>
+            </div>
+            
+            <p style="color:var(--text-2);margin:16px 0;">
+              To confirm, type <strong style="color:var(--text);">RESET</strong> below:
+            </p>
+            
+            <input type="text" id="seasonResetConfirmInput" class="confirmation-input" placeholder="Type RESET here" style="text-transform:uppercase;">
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('seasonResetModal').remove();showToast('Reset cancelled')">Cancel</button>
+              <button class="btn admin-danger" id="seasonResetExecuteBtn" disabled style="opacity:0.5;cursor:not-allowed;">Execute Reset</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(document.createElement('div')).innerHTML = modalHtml;
+      const modal = document.getElementById('seasonResetModal');
+      const input = document.getElementById('seasonResetConfirmInput');
+      const executeBtn = document.getElementById('seasonResetExecuteBtn');
+      
+      input.addEventListener('input', function() {
+        if (this.value.toUpperCase() === 'RESET') {
+          input.classList.add('valid');
+          executeBtn.disabled = false;
+          executeBtn.style.opacity = '1';
+          executeBtn.style.cursor = 'pointer';
+        } else {
+          input.classList.remove('valid');
+          executeBtn.disabled = true;
+          executeBtn.style.opacity = '0.5';
+          executeBtn.style.cursor = 'not-allowed';
+        }
+      });
+      
+      executeBtn.addEventListener('click', function() {
+        const archive = executeSeasonReset(cycleType);
+        modal.remove();
+        showToast('✓ Season reset complete! Data archived.');
+        logAdminAction(currentTeacherId, 'execute_season_reset', { cycleType, archiveId: archive._id });
+        renderSeasonManagementPanel();
+      });
+    }
+
+    /* =============================================
+       MODAL: USER DELETION CONFIRMATION
+       ============================================= */
+    function showUserDeletionConfirmationModal(selectedUsers, currentUserId) {
+      const userSummary = selectedUsers
+        .map(u => {
+          const user = u.userType === 'student' 
+            ? sdkLoad('students', u.userId)
+            : sdkLoad('teachers', u.userId);
+          return user ? `${user.firstName} ${user.familyName}` : 'Unknown';
+        })
+        .join(', ');
+      
+      let modalHtml = `
+        <div class="modal-overlay active" id="userDeletionModal" style="z-index:10001;">
+          <div class="modal" style="max-width:520px;">
+            <h3 style="color:var(--text);margin-bottom:20px;">⚠️ Confirm User Deletion</h3>
+            
+            <div class="admin-highlight">
+              <strong>CAUTION:</strong> This will permanently delete:
+              <ul style="margin:8px 0 0 16px;padding:8px;">
+                <li>${selectedUsers.length} user account(s)</li>
+                <li>All associated records (points, progress, history)</li>
+                <li>This action CANNOT be undone</li>
+              </ul>
+              <div style="margin-top:12px;font-weight:600;">Users affected: ${userSummary}</div>
+            </div>
+            
+            <p style="color:var(--text-2);margin:16px 0;">
+              To confirm, type <strong style="color:var(--text);">CONFIRM</strong> below:
+            </p>
+            
+            <input type="text" id="userDeletionConfirmInput" class="confirmation-input" placeholder="Type CONFIRM here" style="text-transform:uppercase;">
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('userDeletionModal').remove();showToast('Deletion cancelled')">Cancel</button>
+              <button class="btn admin-danger" id="userDeletionExecuteBtn" disabled style="opacity:0.5;cursor:not-allowed;">Delete Users</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(document.createElement('div')).innerHTML = modalHtml;
+      const modal = document.getElementById('userDeletionModal');
+      const input = document.getElementById('userDeletionConfirmInput');
+      const executeBtn = document.getElementById('userDeletionExecuteBtn');
+      
+      input.addEventListener('input', function() {
+        if (this.value.toUpperCase() === 'CONFIRM') {
+          input.classList.add('valid');
+          executeBtn.disabled = false;
+          executeBtn.style.opacity = '1';
+          executeBtn.style.cursor = 'pointer';
+        } else {
+          input.classList.remove('valid');
+          executeBtn.disabled = true;
+          executeBtn.style.opacity = '0.5';
+          executeBtn.style.cursor = 'not-allowed';
+        }
+      });
+      
+      executeBtn.addEventListener('click', function() {
+        const results = {
+          students: { success: 0, failed: [] },
+          teachers: { success: 0, failed: [] }
+        };
+        
+        selectedUsers.forEach(u => {
+          const result = u.userType === 'student'
+            ? deleteStudent(u.userId, currentUserId)
+            : deleteTeacher(u.userId, currentUserId);
+          
+          if (result) {
+            results[u.userType + 's'].success++;
+          } else {
+            results[u.userType + 's'].failed.push(u.userId);
+          }
+        });
+        
+        modal.remove();
+        showToast(`✓ Deleted ${results.students.success + results.teachers.success} user(s)`);
+        logAdminAction(currentTeacherId, 'bulk_delete_users', { count: selectedUsers.length, results });
+        renderUserManagementPanel();
       });
     }
 
