@@ -6271,6 +6271,9 @@
         submittedAt: new Date().toISOString()
       };
       
+      /* Get previous HP value for this sport assessment */
+      const previousTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      
       /* Update or add skill */
       const existingSkillIdx = assessment.skills.findIndex(s => s.name === skillName);
       if (existingSkillIdx >= 0) {
@@ -6286,12 +6289,15 @@
       /* Save assessment */
       sdkSave('assessments', compositeId, assessment);
       
-      /* Update House Points: Sum all skill levels from this assessment */
-      const totalHPForAssessment = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      /* Calculate new total HP for this assessment */
+      const newTotal = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      const hpDifference = newTotal - previousTotal;
       
-      /* Update student house points */
-      student.housePoints = (student.housePoints || 0) + (level);
-      sdkSave('students', studentId, student);
+      /* Update student house points by difference only */
+      if (hpDifference !== 0) {
+        student.housePoints = (student.housePoints || 0) + hpDifference;
+        sdkSave('students', studentId, student);
+      }
     }
 
     /* =============================================
@@ -9361,11 +9367,20 @@
 
       /* Points breakdown */
       const myEvents = allEvents.filter(e => e.studentId === (student._id || studentId));
-      const teacherAssessments = myEvents.filter(e => e.source === 'teacher_assessment').reduce((sum, e) => sum + (e.points || 0), 0);
+      
+      /* Calculate teacher assessments from assessments collection (not events) */
+      const allAssessments = sdkLoadAll('assessments') || [];
+      const myAssessments = allAssessments.filter(a => a.studentId === (student._id || studentId) && a.source === 'teacher');
+      const teacherAssessments = myAssessments.reduce((sum, a) => {
+        const total = (a.skills || []).reduce((s, skill) => s + (skill.level || 0), 0);
+        return sum + total;
+      }, 0);
+      
       const quizXP = myEvents.filter(e => e.source === 'quiz_xp').reduce((sum, e) => sum + (e.points || 0), 0);
       const historyXP = myEvents.filter(e => e.source === 'history_quiz').reduce((sum, e) => sum + (e.points || 0), 0);
       const teacherBonuses = myEvents.filter(e => e.source === 'teacher_bonus').reduce((sum, e) => sum + (e.points || 0), 0);
       const otherHP = myHP - teacherAssessments - quizXP - historyXP - teacherBonuses;
+      console.log('[renderHousePoints] Breakdown - teacherAssessments:', teacherAssessments, 'other:', otherHP);
 
       html += `
         <div class="hp-personal">
@@ -9381,12 +9396,24 @@
           </table>
           <div class="hp-recent">
             <h4>Recent Activity</h4>
-            ${myEvents.length > 0 ? myEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(e => `
-              <div class="hp-event">
-                <span>${e.note || e.source}</span>
-                <span>+${e.points || 0} HP</span>
-              </div>
-            `).join('') : '<p style="color:var(--text-2);font-size:0.85rem;">No activity yet</p>'}
+            ${(myEvents.length > 0 || myAssessments.length > 0) ? `
+              ${myAssessments.length > 0 ? myAssessments.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)).slice(0, 3).map(a => {
+                const total = (a.skills || []).reduce((s, skill) => s + (skill.level || 0), 0);
+                const sport = SPORTS_LIST.find(s => s.key === a.sportKey);
+                return `
+                  <div class="hp-event">
+                    <span>${sport ? sport.emoji + ' ' + sport.name : a.sportKey} Assessment</span>
+                    <span>+${total} HP</span>
+                  </div>
+                `;
+              }).join('') : ''}
+              ${myEvents.length > 0 ? myEvents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(e => `
+                <div class="hp-event">
+                  <span>${e.note || e.source}</span>
+                  <span>+${e.points || 0} HP</span>
+                </div>
+              `).join('') : ''}
+            ` : '<p style="color:var(--text-2);font-size:0.85rem;">No activity yet</p>'}
           </div>
         </div>
       `;
