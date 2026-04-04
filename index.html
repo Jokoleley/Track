@@ -20,24 +20,72 @@
       --accent: #667EEA;
       --accent-2: #28A745;
       --gold: #F9A825;
-      --bg-start: #667EEA;
-      --bg-end: #764BA2;
+      --bg-start: #EEF2FF;
+      --bg-end: #E4E7EC;
       --surface: #FFFFFF;
-      --surface-2: #F8F9FA;
-      --text: #1A1A1A;
-      --text-2: #666666;
-      --border: #E0E0E0;
+      --surface-2: #F6F6F8;
+      --text: #0F172A;
+      --text-2: #475569;
+      --text-primary: #1A1A1A;
+      --border: #D4D7DE;
       --transition: 200ms ease;
+
+      /* Semantic palette for light mode */
+      --theme-bg-base: #FFFFFF;
+      --theme-bg-surface: #F6F6F8;
+      --theme-bg-elevation-1: #E5E6EA;
+      --theme-bg-elevation-2: #DADDE4;
+      --theme-text-primary: #1A1A1A;
+      --theme-text-secondary: #475569;
+      --theme-text-muted: #64748B;
+      --theme-border: #D4D7DE;
+      --theme-accent-cta: #FF6A00;
+      --theme-accent-reward: #00D9A1;
+      --theme-accent-info: #1F8CFF;
+      --theme-accent-warning: #FFAB47;
+      --theme-focus: #4D9CFF;
+
+      --surface: var(--theme-bg-surface);
+      --surface-2: var(--theme-bg-elevation-1);
+      --text: var(--theme-text-primary);
+      --text-2: var(--theme-text-secondary);
+      --border: var(--theme-border);
+      --accent: var(--theme-accent-cta);
+      --accent-2: var(--theme-accent-reward);
     }
 
     [data-theme="dark"] {
-      --bg-start: #1A1A2E;
-      --bg-end: #16213E;
-      --surface: #0F3460;
-      --surface-2: #1A237E;
+      --bg-start: #121212;
+      --bg-end: #1F1F1F;
+      --surface: #1F1F1F;
+      --surface-2: #2A2A2A;
       --text: #FFFFFF;
-      --text-2: #CCCCCC;
-      --border: #333333;
+      --text-2: #B0B0B0;
+      --text-primary: #FFFFFF;
+      --border: #303030;
+
+      /* Semantic palette for dark mode */
+      --theme-bg-base: #121212;
+      --theme-bg-surface: #1F1F1F;
+      --theme-bg-elevation-1: #2A2A2A;
+      --theme-bg-elevation-2: #313131;
+      --theme-text-primary: #FFFFFF;
+      --theme-text-secondary: #B0B0B0;
+      --theme-text-muted: #8A8A8A;
+      --theme-border: #303030;
+      --theme-accent-cta: #FF6A00;
+      --theme-accent-reward: #00D9A1;
+      --theme-accent-info: #26A6FF;
+      --theme-accent-warning: #FFAB47;
+      --theme-focus: #4D9CFF;
+
+      --surface: var(--theme-bg-surface);
+      --surface-2: var(--theme-bg-elevation-1);
+      --text: var(--theme-text-primary);
+      --text-2: var(--theme-text-secondary);
+      --border: var(--theme-border);
+      --accent: var(--theme-accent-cta);
+      --accent-2: var(--theme-accent-reward);
     }
 
     /* =============================================
@@ -56,39 +104,77 @@
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
-      color: var(--text);
+      background: var(--theme-bg-base);
+      color: var(--theme-text-primary);
       min-height: 100vh;
       line-height: 1.5;
       transition: background var(--transition), color var(--transition);
       overflow-x: hidden;
     }
 
+    .app-background-gradient {
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    }
+
     /* =============================================
-       THEME TOGGLE
+       THEME TOGGLE - MODERN SWITCH
        ============================================= */
     .theme-toggle {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 9999;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+      position: relative;
+      z-index: 100;
+      width: 56px;
+      height: 28px;
+      border-radius: 14px;
       border: 2px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 1.25rem;
+      background: var(--surface-2);
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      transition: transform var(--transition), background var(--transition);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      padding: 2px;
+      transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      font-size: 0;
+      overflow: hidden;
+    }
+
+    .theme-toggle::before {
+      content: '🌙';
+      position: absolute;
+      left: 4px;
+      font-size: 0.85rem;
+      opacity: 1;
+      transition: opacity 300ms ease, transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      transform: scale(1);
+    }
+
+    .theme-toggle::after {
+      content: '☀️';
+      position: absolute;
+      right: 4px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 300ms ease, transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      transform: scale(0.7);
+    }
+
+    [data-theme="dark"] .theme-toggle::before {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+
+    [data-theme="dark"] .theme-toggle::after {
+      opacity: 1;
+      transform: scale(1);
     }
 
     .theme-toggle:hover {
-      transform: scale(1.1);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(102, 126, 234, 0.3);
+      transform: scale(1.08);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
     }
 
     /* =============================================
@@ -108,18 +194,18 @@
     }
 
     .toast {
-      background: var(--surface);
-      color: var(--text);
+      background: var(--theme-bg-surface);
+      color: var(--theme-text-primary);
       padding: 12px 24px;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.22);
       font-size: 0.95rem;
       font-weight: 500;
       opacity: 0;
       transform: translateY(-20px);
       animation: toastIn 300ms ease forwards;
       pointer-events: auto;
-      border-left: 4px solid var(--accent);
+      border-left: 4px solid var(--theme-accent-info);
       max-width: 90vw;
     }
 
@@ -205,11 +291,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 48px;
-      padding: 12px 24px;
-      border-radius: 12px;
+      min-height: 40px;
+      padding: 8px 16px;
+      border-radius: 8px;
       border: none;
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
@@ -223,20 +309,20 @@
     }
 
     .btn-primary {
-      background: var(--accent);
+      background: var(--theme-accent-cta);
       color: #FFFFFF;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 12px rgba(255, 106, 0, 0.45);
     }
 
     .btn-primary:hover {
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 106, 0, 0.5);
       filter: brightness(1.05);
     }
 
     .btn-secondary {
-      background: var(--surface-2);
-      color: var(--text);
-      border: 1px solid var(--border);
+      background: var(--theme-bg-elevation-1);
+      color: var(--theme-text-primary);
+      border: 1px solid var(--theme-border);
     }
 
     .btn-secondary:hover {
@@ -244,12 +330,12 @@
     }
 
     .btn-danger {
-      background: var(--house-red);
+      background: var(--theme-accent-warning);
       color: #FFFFFF;
     }
 
     .btn-success {
-      background: var(--accent-2);
+      background: var(--theme-accent-reward);
       color: #FFFFFF;
     }
 
@@ -269,26 +355,26 @@
        INPUTS
        ============================================= */
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
 
     .form-group label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 3px;
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: var(--text-2);
     }
 
     .form-input {
       width: 100%;
-      min-height: 48px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      background: var(--surface);
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
       color: var(--text);
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-family: inherit;
       transition: border-color var(--transition), box-shadow var(--transition);
       outline: none;
@@ -296,7 +382,8 @@
 
     .form-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      background: var(--surface);
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
     }
 
     .form-input.error {
@@ -305,13 +392,13 @@
 
     .form-select {
       width: 100%;
-      min-height: 48px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      background: var(--surface);
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
       color: var(--text);
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-family: inherit;
       transition: border-color var(--transition);
       outline: none;
@@ -341,23 +428,26 @@
     /* Radio group */
     .radio-group {
       display: flex;
-      gap: 12px;
-      margin-top: 4px;
+      gap: 6px;
+      margin-top: 3px;
+      flex-wrap: wrap;
     }
 
     .radio-option {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 3px;
       cursor: pointer;
-      padding: 10px 20px;
-      border-radius: 12px;
-      border: 2px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
       transition: border-color var(--transition), background var(--transition);
-      min-height: 48px;
+      min-height: 28px;
       flex: 1;
+      min-width: 70px;
       justify-content: center;
       font-weight: 500;
+      font-size: 0.75rem;
     }
 
     .radio-option:has(input:checked) {
@@ -367,8 +457,8 @@
 
     .radio-option input[type="radio"] {
       accent-color: var(--accent);
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
     }
 
     /* =============================================
@@ -377,17 +467,17 @@
     .house-selector {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-top: 4px;
+      gap: 6px;
+      margin-top: 3px;
     }
 
     .house-btn {
-      min-height: 64px;
-      border-radius: 16px;
-      border: 3px solid transparent;
+      min-height: 40px;
+      border-radius: 8px;
+      border: 2px solid transparent;
       cursor: pointer;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.75rem;
       color: #fff;
       transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
@@ -395,13 +485,13 @@
     }
 
     .house-btn:hover {
-      transform: scale(1.05);
+      transform: scale(1.04);
     }
 
     .house-btn.selected {
       border-color: var(--text);
-      box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0,0,0,0.2);
-      transform: scale(1.05);
+      box-shadow: 0 0 0 2px var(--accent);
+      transform: scale(1.04);
     }
 
     .house-btn[data-house="Yellow"] { background: var(--house-yellow); color: #333; text-shadow: none; }
@@ -413,98 +503,196 @@
        AUTH SCREEN
        ============================================= */
     #authScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100vh;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
       animation: viewFadeIn 300ms ease;
+      background: var(--surface);
+      z-index: 10000;
+      overflow: hidden;
     }
 
     .auth-container {
       background: var(--surface);
-      border-radius: 20px;
+      border-radius: 16px;
       width: 100%;
-      max-width: 520px;
+      max-width: 480px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      max-height: 90vh;
     }
 
     .auth-header {
       text-align: center;
-      padding: 32px 24px 20px;
+      padding: 16px 16px 10px;
+      flex-shrink: 0;
+      background: var(--surface);
     }
 
     .auth-header h1 {
-      font-size: 2rem;
-      margin-bottom: 4px;
+      font-size: 1.8rem;
+      margin-bottom: 2px;
       color: var(--text);
     }
 
     .auth-header p {
       color: var(--text-2);
-      font-size: 0.95rem;
+      font-size: 0.85rem;
     }
 
-    /* Tabs */
-    .auth-tabs {
+    /* Main Tabs - STUDENT vs TEACHER */
+    .auth-main-tabs {
       display: flex;
-      border-bottom: 2px solid var(--border);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      gap: 0;
+      padding: 0;
+      background: var(--surface-2);
+      border-radius: 0;
+      flex-shrink: 0;
     }
 
-    .auth-tabs::-webkit-scrollbar {
-      display: none;
-    }
-
-    .auth-tab {
+    .auth-main-tab {
       flex: 1;
-      min-width: max-content;
-      min-height: 48px;
-      padding: 12px 12px;
+      min-height: 52px;
+      padding: 14px 12px;
       border: none;
-      background: none;
-      font-size: 0.8rem;
-      font-weight: 600;
+      background: var(--surface-2);
+      font-size: 1rem;
+      font-weight: 700;
       color: var(--text-2);
       cursor: pointer;
-      transition: color var(--transition), border-color var(--transition);
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
+      transition: all 250ms ease;
+      border-radius: 0;
       font-family: inherit;
-      white-space: nowrap;
+      position: relative;
     }
 
-    .auth-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .auth-tab:hover {
+    .auth-main-tab:hover:not(.active) {
+      background: rgba(0,0,0,0.05);
       color: var(--text);
     }
 
-    .auth-form-container {
-      padding: 24px;
+    .auth-main-tab.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 106, 0, 0.4);
     }
 
+    .auth-main-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: white;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* Mode Selector - Create Account / Log In */
+    .auth-modes {
+      display: none;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .auth-modes.active {
+      display: flex;
+    }
+
+    .auth-mode-btn {
+      flex: 1;
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 2px solid var(--border);
+      background: var(--surface-2);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 200ms ease;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .auth-mode-btn:hover {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .auth-mode-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(255, 106, 0, 0.3);
+    }
+
+    /* Form styling */
     .auth-form {
       display: none;
+      width: 100%;
     }
 
     .auth-form.active {
       display: block;
+      width: 100%;
+      animation: fadeIn 200ms ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .auth-form-container {
+      padding: 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1 1 auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      min-height: 0;
+    }
+
+    .auth-form-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .auth-form-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .auth-form-container::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .auth-form-container::-webkit-scrollbar-thumb:hover {
+      background: var(--text-2);
     }
 
     .key-stage-badge {
       display: inline-block;
       background: var(--accent);
       color: #fff;
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
+      padding: 3px 10px;
+      border-radius: 16px;
+      font-size: 0.7rem;
       font-weight: 600;
       margin-top: 4px;
     }
@@ -512,17 +700,17 @@
     .file-upload-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
-      min-height: 48px;
-      padding: 12px 20px;
+      gap: 4px;
+      min-height: 32px;
+      padding: 6px 10px;
       border: 2px dashed var(--border);
-      border-radius: 12px;
+      border-radius: 6px;
       background: var(--surface-2);
       color: var(--text-2);
       cursor: pointer;
       transition: border-color var(--transition);
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 0.75rem;
       width: 100%;
     }
 
@@ -987,7 +1175,141 @@
     }
 
     /* =============================================
-       RESPONSIVE BREAKPOINTS
+       ARENA & GHOST BATTLE MODULE
+       ============================================= */
+    .arena-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .arena-stat {
+      text-align: center;
+    }
+    .arena-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .arena-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+    .arena-matchup {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .arena-opponent {
+      flex: 1;
+      text-align: center;
+    }
+    .arena-opponent-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 8px;
+      background: var(--surface-2);
+      border: 3px solid var(--accent);
+    }
+    .arena-opponent-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .arena-opponent-info {
+      font-size: 0.85rem;
+      color: var(--text-2);
+    }
+    .arena-vs {
+      font-size: 1.8rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .arena-battle-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: inherit;
+    }
+    .arena-battle-btn.challenge {
+      background: var(--accent);
+      color: white;
+      min-height: 48px;
+    }
+    .arena-battle-btn.challenge:hover {
+      filter: brightness(1.05);
+    }
+    .arena-question {
+      padding: 16px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .arena-question-text {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    .arena-timer {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .arena-result-card {
+      padding: 20px;
+      text-align: center;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .arena-result-big {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    .arena-result-text {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .arena-gp-change {
+      font-size: 1.1rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    /* =============================================
+       RESPONSIVE BREAKPOINTS (updated)
        ============================================= */
 
     /* Tablet (768-1024px) */
@@ -1238,17 +1560,38 @@
     .quiz-stats-bar .stat-label { font-size: 0.7rem; color: var(--text-2); }
 
     .quiz-map-container {
-      max-width: 480px;
+      max-width: 100%;
       margin: 0 auto;
       padding: 12px;
       overflow-y: auto;
-      max-height: 60vh;
+      max-height: 70vh;
     }
     .quiz-map {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      padding: 8px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 3000px;
+    }
+    .quiz-map svg {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 300px;
+      height: 100%;
+      z-index: 1;
+    }
+    .quiz-nodes-container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      align-items: center;
     }
     .quiz-node {
       width: 52px;
@@ -1260,40 +1603,48 @@
       font-size: 0.8rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform var(--transition);
-      margin: 0 auto;
+      transition: transform var(--transition), filter var(--transition);
       border: 2px solid var(--border);
       background: var(--surface-2);
       color: var(--text-2);
+      position: relative;
+    }
+    .quiz-node:hover:not(.locked) {
+      transform: scale(1.1);
     }
     .quiz-node.completed {
       background: var(--accent);
       border-color: var(--accent);
       color: white;
+      box-shadow: 0 0 12px rgba(102,126,234,0.4);
     }
     .quiz-node.current {
       border-color: var(--accent);
       background: var(--surface);
       color: var(--accent);
       animation: pulse 2s infinite;
+      box-shadow: 0 0 16px rgba(102,126,234,0.3);
     }
     .quiz-node.locked {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: default;
     }
     .quiz-node.milestone {
       width: 64px;
       height: 64px;
-      border-color: var(--gold);
-      font-size: 1rem;
+      font-size: 1.2rem;
     }
     .quiz-node.milestone.completed {
       background: var(--gold);
       border-color: var(--gold);
+      box-shadow: 0 0 16px rgba(249,168,37,0.4);
     }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(102,126,234,0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(102,126,234,0); }
+    .quiz-node-label {
+      position: absolute;
+      bottom: -20px;
+      white-space: nowrap;
+      font-size: 0.7rem;
+      color: var(--text-2);
     }
 
     .quiz-intro { padding: 16px; text-align: center; }
@@ -1700,14 +2051,37 @@
       margin-bottom: 12px;
       min-height: 40px;
     }
+
+    /* Ensure script tags are not visible */
+    script {
+      display: none !important;
+    }
+
+    html {
+      overflow: hidden;
+    }
+
+    body {
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #authScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10000;
+    }
+
+    #authScreen:not([style*="display: none"]) ~ * {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
-  <!-- ============================================
-       THEME TOGGLE
-       ============================================ -->
-  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
-
   <!-- ============================================
        TOAST CONTAINER
        ============================================ -->
@@ -1718,23 +2092,36 @@
        ============================================ -->
   <div id="authScreen">
     <div class="auth-container">
-      <div class="auth-header">
-        <h1>PE Hub</h1>
-        <p>Your personal PE learning journey</p>
+      <div class="auth-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;text-align:center;">
+          <h1>PE Hub</h1>
+          <p>Your personal PE learning journey</p>
+        </div>
+        <button class="theme-toggle" id="themeToggleAuth" style="margin:0;padding:4px 8px;" aria-label="Toggle theme"></button>
       </div>
 
-      <!-- Auth Tabs -->
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="studentRegister">🎓 Student &mdash; Register</button>
-        <button class="auth-tab" data-tab="studentLogin">🎓 Student &mdash; Log In</button>
-        <button class="auth-tab" data-tab="teacherLogin">👨‍🏫 Teacher &mdash; Log In</button>
-        <button class="auth-tab" data-tab="teacherRegister">👨‍🏫 Teacher &mdash; Register</button>
+      <!-- Auth Main Tabs: STUDENT vs TEACHER -->
+      <div class="auth-main-tabs">
+        <button class="auth-main-tab active" data-main-tab="student">🎓 STUDENT</button>
+        <button class="auth-main-tab" data-main-tab="teacher">👨‍🏫 TEACHER</button>
+      </div>
+
+      <!-- Auth Mode Selector for STUDENT -->
+      <div class="auth-modes" data-main-tab="student">
+        <button class="auth-mode-btn active" data-mode="register">Create Account</button>
+        <button class="auth-mode-btn" data-mode="login">Log In</button>
+      </div>
+
+      <!-- Auth Mode Selector for TEACHER -->
+      <div class="auth-modes" data-main-tab="teacher">
+        <button class="auth-mode-btn" data-mode="register">Create Account</button>
+        <button class="auth-mode-btn" data-mode="login">Log In</button>
       </div>
 
       <div class="auth-form-container">
 
         <!-- ===== STUDENT REGISTER FORM ===== -->
-        <form class="auth-form active" id="studentRegisterForm" data-tab="studentRegister" novalidate>
+        <form class="auth-form active" id="studentRegisterForm" data-main-tab="student" data-mode="register" novalidate>
           <div class="form-group">
             <label for="srFirstName">First Name</label>
             <input type="text" id="srFirstName" class="form-input" placeholder="Enter first name" required>
@@ -1827,7 +2214,7 @@
         </form>
 
         <!-- ===== STUDENT LOGIN FORM ===== -->
-        <form class="auth-form" id="studentLoginForm" data-tab="studentLogin" novalidate>
+        <form class="auth-form" id="studentLoginForm" data-main-tab="student" data-mode="login" novalidate>
           <div class="form-group">
             <label for="slStudentId">Student ID</label>
             <input type="text" id="slStudentId" class="form-input" placeholder="Enter your Student ID" required>
@@ -1844,7 +2231,7 @@
         </form>
 
         <!-- ===== TEACHER LOGIN FORM ===== -->
-        <form class="auth-form" id="teacherLoginForm" data-tab="teacherLogin" novalidate>
+        <form class="auth-form" id="teacherLoginForm" data-main-tab="teacher" data-mode="login" novalidate>
           <div class="form-group">
             <label for="tlTeacherId">Teacher ID</label>
             <input type="text" id="tlTeacherId" class="form-input" placeholder="Enter your Teacher ID" required>
@@ -1861,7 +2248,7 @@
         </form>
 
         <!-- ===== TEACHER REGISTER FORM ===== -->
-        <form class="auth-form" id="teacherRegisterForm" data-tab="teacherRegister" novalidate>
+        <form class="auth-form" id="teacherRegisterForm" data-main-tab="teacher" data-mode="register" novalidate>
           <div class="form-group">
             <label for="trTitle">Title</label>
             <select id="trTitle" class="form-select" required>
@@ -1922,7 +2309,10 @@
     <!-- Header -->
     <div class="app-header">
       <h2>PE Hub</h2>
-      <button class="btn-logout" id="logoutBtn">Logout</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="theme-toggle" id="themeToggleMobile" aria-label="Toggle theme"></button>
+        <button class="btn-logout" id="logoutBtn">Logout</button>
+      </div>
     </div>
 
     <!-- Bottom Nav (mobile) / Top Nav (desktop) -->
@@ -1930,6 +2320,10 @@
       <button class="nav-item active" data-section="home">
         <span class="nav-icon">🏠</span>
         <span>Home</span>
+      </button>
+      <button class="nav-item" data-section="arena">
+        <span class="nav-icon">⚔️</span>
+        <span>Arena</span>
       </button>
       <button class="nav-item" data-section="sports">
         <span class="nav-icon">🏃</span>
@@ -1941,7 +2335,7 @@
       </button>
       <button class="nav-item" data-section="housePoints">
         <span class="nav-icon">🏆</span>
-        <span>House Points</span>
+        <span>House</span>
       </button>
     </nav>
 
@@ -1984,6 +2378,13 @@
 
         <!-- Summary Cards -->
         <div class="summary-cards">
+          <div class="summary-card" id="summaryArena" data-goto="arena">
+            <div class="summary-icon">⚔️</div>
+            <div class="summary-info">
+              <h3>Arena</h3>
+              <p id="summaryArenaText">0 GP &middot; 0 wins</p>
+            </div>
+          </div>
           <div class="summary-card" id="summaryQuiz" data-goto="quiz">
             <div class="summary-icon">🧠</div>
             <div class="summary-info">
@@ -2013,10 +2414,20 @@
         </div>
       </div>
 
+      <!-- ===== ARENA SECTION ===== -->
+      <div class="student-section" id="sectionArena">
+        <div class="section-header"><h2>⚔️ Arena & Duels</h2></div>
+        <div id="arenaMainView"></div>
+        <div id="arenaResultsView" style="display:none;"></div>
+      </div>
+
       <!-- ===== SPORTS SECTION ===== -->
       <div class="student-section" id="sectionSports">
         <div id="sportsGridView">
-          <div class="section-header"><h2>🏃 Sports</h2></div>
+          <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h2>🏃 Sports</h2>
+            <button id="refreshSportsBtn" style="background:var(--surface-2);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:0.85rem;color:var(--text);font-weight:600;transition:all 200ms ease;" title="Refresh sports list">🔄 Refresh</button>
+          </div>
           <div id="sportsEmptyState" class="empty-state" style="display:none;">
             <div class="empty-icon">🏃</div>
             <p>Pick a sport below to start your first lesson!</p>
@@ -2074,6 +2485,7 @@
       <h2>PE Hub &mdash; Teacher</h2>
       <div class="teacher-header-actions">
         <button class="notification-bell" id="teacherNotifBell">🔔 <span class="notif-badge" id="notifBadge" style="display:none;">0</span></button>
+        <button class="theme-toggle" id="themeToggleTeacher" aria-label="Toggle theme"></button>
         <button class="btn-logout" id="teacherLogoutBtn">Logout</button>
       </div>
     </div>
@@ -2084,11 +2496,13 @@
     <nav class="teacher-nav" id="teacherNav">
       <button class="nav-item active" data-section="classOverview">📋 Class Overview</button>
       <button class="nav-item" data-section="skillDefs">✏️ Skill Definitions</button>
+      <button class="nav-item" data-section="sportControls">⚙️ Sport Controls</button>
       <button class="nav-item" data-section="wellDone">🏅 Well Done!</button>
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
       <div class="teacher-section" id="tSectionSkillDefs"></div>
+      <div class="teacher-section" id="tSectionSportControls"></div>
       <div class="teacher-section" id="tSectionWellDone"></div>
     </div>
   </div>
@@ -2114,6 +2528,18 @@
        JAVASCRIPT
        ============================================ -->
   <script>
+    /* =============================================
+       DATA FORMAT DOCUMENTATION
+       ============================================= 
+       IMPORTANT: All classGrade values must be in format:
+       - "Year 3I" (no space between year and letter)
+       - "Year 3 I" (with space - both work!)
+       Example: "Year 10A", "Year 10 A", "Year 3I", "Year 3 I"
+       
+       All parsing uses parseClassGrade() utility for consistency.
+       This automatically handles both formats.
+       ============================================= */
+    
     /* =============================================
        STEP 2 - SDK FUNCTIONS
        ============================================= */
@@ -2150,6 +2576,85 @@
       delete store[id];
       localStorage.setItem(collection, JSON.stringify(store));
     }
+
+    /* =============================================
+       UTILITY: Parse classGrade consistently
+       Handles both "Year 3I" and "Year 3 I" formats
+       ============================================= */
+    function parseClassGrade(classGrade) {
+      if (!classGrade) return { yearGroup: null, classLetter: 'A', yearNum: null, isValid: false };
+      
+      /* Match "Year XX" or "Year XX X" with optional space between year and letter */
+      const match = String(classGrade).match(/^Year\s+(\d{1,2})\s*([A-Z]?)$/i);
+      
+      if (!match) {
+        console.warn('[parseClassGrade] Invalid format:', classGrade);
+        return { yearGroup: null, classLetter: 'A', yearNum: null, isValid: false };
+      }
+      
+      const yearNum = parseInt(match[1], 10);
+      const classLetter = match[2] || 'A';
+      
+      return {
+        yearGroup: yearNum,
+        classLetter: classLetter,
+        yearNum: yearNum,
+        classKey: `class_${yearNum}${classLetter}`,
+        isValid: true
+      };
+    }
+
+    /* DEBUG: View all saved Sport Controls */
+    window.debugSportControls = function() {
+      const allConfigs = sdkLoadAll('classSportsActive') || {};
+      console.log('[DEBUG] All Sport Controls Configurations:', allConfigs);
+      return allConfigs;
+    };
+
+    /* DEBUG: View all students and their classes */
+    window.debugStudents = function() {
+      const allStudents = sdkLoadAll('students') || [];
+      const classList = {};
+      allStudents.forEach(s => {
+        const classKey = `class_${s.yearGroup}${s.classLetter}`;
+        if (!classList[classKey]) classList[classKey] = [];
+        classList[classKey].push(`${s.firstName} ${s.familyName}`);
+      });
+      console.log('[DEBUG] Students by Class:', classList);
+      console.log('[DEBUG] Total students:', allStudents.length);
+      return classList;
+    };
+
+    /* MAINTENANCE: Fix any students with invalid class data */
+    window.fixStudentClassData = function() {
+      const allStudents = sdkLoadAll('students') || [];
+      let fixedCount = 0;
+      
+      allStudents.forEach(student => {
+        const classInfo = parseClassGrade(student.classGrade);
+        
+        if (!classInfo.isValid) {
+          console.warn(`[fixStudentClassData] Invalid classGrade for ${student.firstName} ${student.familyName}:`, student.classGrade);
+          return;
+        }
+        
+        /* Check if yearGroup or classLetter mismatch */
+        if (student.yearGroup !== classInfo.yearGroup || student.classLetter !== classInfo.classLetter) {
+          console.log(`[fixStudentClassData] Fixing ${student.firstName}:`, {
+            old: { yearGroup: student.yearGroup, classLetter: student.classLetter },
+            new: { yearGroup: classInfo.yearGroup, classLetter: classInfo.classLetter }
+          });
+          
+          student.yearGroup = classInfo.yearGroup;
+          student.classLetter = classInfo.classLetter;
+          sdkSave('students', student._id, student);
+          fixedCount++;
+        }
+      });
+      
+      console.log(`[fixStudentClassData] Fixed ${fixedCount} student(s)`);
+      return fixedCount;
+    };
 
     function sdkQuery(collection, filters) {
       const all = sdkLoadAll(collection);
@@ -2280,17 +2785,51 @@
     })();
 
     function updateThemeIcon(theme) {
-      const btn = document.getElementById('themeToggle');
-      if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      /* CSS pseudo-elements handle emoji display based on [data-theme] attribute */
+      /* No need to update textContent - just keeping for compatibility */
     }
 
-    document.getElementById('themeToggle').addEventListener('click', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+      const themeToggleFixed = document.getElementById('themeToggle');
+      if (themeToggleFixed) {
+        themeToggleFixed.addEventListener('click', toggleTheme);
+      }
+      const themeToggleMobile = document.getElementById('themeToggleMobile');
+      if (themeToggleMobile) {
+        themeToggleMobile.addEventListener('click', toggleTheme);
+      }
+      const themeToggleTeacher = document.getElementById('themeToggleTeacher');
+      if (themeToggleTeacher) {
+        themeToggleTeacher.addEventListener('click', toggleTheme);
+      }
+      const themeToggleAuth = document.getElementById('themeToggleAuth');
+      if (themeToggleAuth) {
+        themeToggleAuth.addEventListener('click', toggleTheme);
+      }
+
+      /* Initialize auth UI */
+      const studentModeSelector = document.querySelector('.auth-modes[data-main-tab="student"]');
+      if (studentModeSelector) {
+        studentModeSelector.classList.add('active');
+        const firstRegisterBtn = studentModeSelector.querySelector('[data-mode="register"]');
+        if (firstRegisterBtn) {
+          firstRegisterBtn.classList.add('active');
+        }
+      }
+      
+      const studentRegisterForm = document.querySelector('.auth-form[data-main-tab="student"][data-mode="register"]');
+      if (studentRegisterForm) {
+        studentRegisterForm.classList.add('active');
+      }
+    });
+
+    function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('peHubTheme', next);
       updateThemeIcon(next);
-    });
+    }
 
     /* =============================================
        POPULATE CLASS DROPDOWN
@@ -2309,20 +2848,65 @@
     })();
 
     /* =============================================
-       AUTH TABS
+       AUTH MAIN TABS (Student vs Teacher)
        ============================================= */
-    document.querySelectorAll('.auth-tab').forEach(tab => {
+    let currentMainTab = 'student';
+    let currentMode = 'register';
+
+    document.querySelectorAll('.auth-main-tab').forEach(tab => {
       tab.addEventListener('click', function() {
-        const tabName = this.getAttribute('data-tab');
-        /* Highlight active tab */
-        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        currentMainTab = this.getAttribute('data-main-tab');
+        
+        /* Update active main tab */
+        document.querySelectorAll('.auth-main-tab').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
-        /* Show correct form */
-        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-        const form = document.querySelector(`.auth-form[data-tab="${tabName}"]`);
-        if (form) form.classList.add('active');
+        
+        /* Show/hide mode selectors for this tab */
+        document.querySelectorAll('.auth-modes').forEach(modeSelector => {
+          if (modeSelector.getAttribute('data-main-tab') === currentMainTab) {
+            modeSelector.classList.add('active');
+            /* Reset to register mode when switching tabs */
+            const firstBtn = modeSelector.querySelector('[data-mode="register"]');
+            if (firstBtn) {
+              firstBtn.click();
+            }
+          } else {
+            modeSelector.classList.remove('active');
+          }
+        });
+        
+        updateAuthForms();
       });
     });
+
+    /* Auth Mode Selector (Register vs Login) */
+    document.querySelectorAll('.auth-mode-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        currentMode = this.getAttribute('data-mode');
+        
+        /* Update active mode button only for current tab's selector */
+        const currentModeSelector = document.querySelector(`.auth-modes[data-main-tab="${currentMainTab}"]`);
+        if (currentModeSelector) {
+          currentModeSelector.querySelectorAll('.auth-mode-btn').forEach(b => b.classList.remove('active'));
+        }
+        this.classList.add('active');
+        
+        updateAuthForms();
+      });
+    });
+
+    function updateAuthForms() {
+      document.querySelectorAll('.auth-form').forEach(form => {
+        const formMainTab = form.getAttribute('data-main-tab');
+        const formMode = form.getAttribute('data-mode');
+        
+        if (formMainTab === currentMainTab && formMode === currentMode) {
+          form.classList.add('active');
+        } else {
+          form.classList.remove('active');
+        }
+      });
+    }
 
     /* =============================================
        HOUSE TEAM SELECTOR
@@ -2434,9 +3018,17 @@
 
       if (!valid) return;
 
-      /* Compute key stage */
-      const yearNum = parseInt(classGrade.replace('Year ', ''), 10);
+      /* Parse classGrade using consistent utility */
+      const classInfo = parseClassGrade(classGrade);
+      const yearNum = classInfo.yearNum;
       const keyStage = getKeyStage(yearNum);
+      const yearGroup = classInfo.yearGroup;
+      const classLetter = classInfo.classLetter;
+      
+      if (!classInfo.isValid) {
+        showError('srClassErr');
+        return;
+      }
 
       /* Hash password */
       const hashedPassword = await hashPassword(password);
@@ -2460,6 +3052,8 @@
         house,
         classGrade,
         yearNumber: yearNum,
+        yearGroup: parseInt(yearGroup),
+        classLetter: classLetter,
         keyStage,
         profilePic: profilePicData,
         activated: true,
@@ -2473,9 +3067,23 @@
         createdAt: new Date().toISOString()
       };
 
+      /* Validate class info before saving */
+      const classValidation = parseClassGrade(studentData.classGrade);
+      if (!classValidation.isValid) {
+        console.error('[Registration] Invalid classGrade:', classGrade);
+        showToast('❌ Error: Invalid class format. Please contact support.');
+        return;
+      }
+      console.log('[Registration] New student class mapping:', {
+        classGrade: studentData.classGrade,
+        classKey: classValidation.classKey,
+        yearGroup: studentData.yearGroup,
+        classLetter: studentData.classLetter
+      });
+
       sdkSave('students', id, studentData);
       sendActivationEmail(email, uuid());
-      showToast('Account created successfully!');
+      showToast('Account created successfully! ✓');
       saveSession(id, 'student');
 
       /* Redirect to student app */
@@ -2628,6 +3236,20 @@
       if (student && !student.onboardingComplete) {
         startOnboarding(studentId);
       }
+      
+      /* Listen for real-time Sport Controls changes from teacher (works across tabs/windows) */
+      window.addEventListener('storage', function onStorageChange(e) {
+        if (e.key === 'classSportsActive') {
+          console.log('[Student App] Detected Sport Controls change from teacher');
+          /* Teacher changed sport availability */
+          const sportsSection = document.getElementById('sectionSports');
+          if (sportsSection && sportsSection.classList.contains('active')) {
+            /* Refresh if currently viewing Sports */
+            console.log('[Student App] Refreshing sports grid...');
+            renderSportsGrid(currentStudentId);
+          }
+        }
+      });
     }
 
     let currentTeacherId = null;
@@ -2639,6 +3261,7 @@
       renderTeacherNotifications();
       renderClassOverview();
       renderSkillDefinitions();
+      renderSportControls();
       renderWellDone();
     }
 
@@ -2654,6 +3277,7 @@
       document.querySelectorAll('.teacher-section').forEach(s => s.classList.remove('active'));
       if (section === 'classOverview') document.getElementById('tSectionClassOverview').classList.add('active');
       else if (section === 'skillDefs') document.getElementById('tSectionSkillDefs').classList.add('active');
+      else if (section === 'sportControls') document.getElementById('tSectionSportControls').classList.add('active');
       else if (section === 'wellDone') document.getElementById('tSectionWellDone').classList.add('active');
     });
 
@@ -2731,6 +3355,20 @@
         <select id="tFilterYear"><option value="">All Year Groups</option>`;
       for (let y = 1; y <= 13; y++) html += `<option value="${y}">Year ${y}</option>`;
       html += `</select>
+        <select id="tFilterClass">
+          <option value="">All Class Letters</option>
+          <option value="C">C</option>
+          <option value="H">H</option>
+          <option value="I">I</option>
+          <option value="S">S</option>
+          <option value="J">J</option>
+          <option value="B">B</option>
+        </select>
+        <select id="tSortHP">
+          <option value="">HP order</option>
+          <option value="hpDesc">HP high → low</option>
+          <option value="hpAsc">HP low → high</option>
+        </select>
         <select id="tFilterHouse">
           <option value="">All Houses</option>
           <option value="Yellow">Yellow</option>
@@ -2760,18 +3398,41 @@
       /* Filter events */
       const applyFilters = () => {
         const yearVal = document.getElementById('tFilterYear').value;
+        const classVal = document.getElementById('tFilterClass').value;
+        const sortVal = document.getElementById('tSortHP').value;
         const houseVal = document.getElementById('tFilterHouse').value;
         const genderVal = document.getElementById('tFilterGender').value;
         const searchVal = document.getElementById('tFilterSearch').value.toLowerCase();
         let filtered = allStudents;
-        if (yearVal) filtered = filtered.filter(s => s.yearNumber === parseInt(yearVal));
+        const parseClassInfo = s => {
+          const classInfo = parseClassGrade(s.classGrade);
+          return {
+            year: classInfo.yearGroup,
+            letter: classInfo.classLetter
+          };
+        };
+        if (yearVal || classVal) {
+          filtered = filtered.filter(s => {
+            const info = parseClassInfo(s);
+            if (yearVal && info.year !== parseInt(yearVal, 10)) return false;
+            if (classVal && info.letter !== classVal) return false;
+            return true;
+          });
+        }
         if (houseVal) filtered = filtered.filter(s => s.house === houseVal);
         if (genderVal) filtered = filtered.filter(s => s.gender === genderVal);
         if (searchVal) filtered = filtered.filter(s => `${s.firstName} ${s.familyName}`.toLowerCase().includes(searchVal));
+        if (sortVal === 'hpDesc') {
+          filtered = filtered.slice().sort((a, b) => (b.housePoints || 0) - (a.housePoints || 0));
+        } else if (sortVal === 'hpAsc') {
+          filtered = filtered.slice().sort((a, b) => (a.housePoints || 0) - (b.housePoints || 0));
+        }
         renderStudentList(filtered, pendingStudentIds);
       };
 
       document.getElementById('tFilterYear').addEventListener('change', applyFilters);
+      document.getElementById('tFilterClass').addEventListener('change', applyFilters);
+      document.getElementById('tSortHP').addEventListener('change', applyFilters);
       document.getElementById('tFilterHouse').addEventListener('change', applyFilters);
       document.getElementById('tFilterGender').addEventListener('change', applyFilters);
       document.getElementById('tFilterSearch').addEventListener('input', applyFilters);
@@ -3103,6 +3764,155 @@
     }
 
     /* =============================================
+       STEP 18 - SPORT CONTROLS (Teacher)
+       ============================================= */
+    function renderSportControls() {
+      const container = document.getElementById('tSectionSportControls');
+      
+      // Load custom sports from database
+      const customSports = sdkLoadAll('sports') || [];
+      const allSports = [...SPORTS_LIST, ...customSports];
+      
+      let html = `<h3 style="margin-bottom:20px;color:var(--text);">⚙️ Sport Controls</h3>`;
+      html += `<p style="color:var(--text-2);font-size:0.9rem;margin-bottom:24px;">Select a Year Group and Class to manage available sports. Toggle sports ON/OFF for each class.</p>`;
+      
+      /* Filters */
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;padding:16px;background:var(--surface-2);border-radius:8px;">`;
+      
+      /* Year Group Dropdown (1-13) */
+      html += `<div>
+        <label style="display:block;margin-bottom:8px;color:var(--text);font-weight:600;font-size:0.9rem;">Year Group</label>
+        <select id="scYearGroup" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:0.95rem;">
+          <option value="">-- Select Year --</option>`;
+      for (let i = 1; i <= 13; i++) {
+        html += `<option value="${i}">Year ${i}</option>`;
+      }
+      html += `</select>
+      </div>`;
+      
+      /* Class Letter Input */
+      html += `<div>
+        <label style="display:block;margin-bottom:8px;color:var(--text);font-weight:600;font-size:0.9rem;">Class Letter</label>
+        <input type="text" id="scClassLetter" placeholder="A, B, C..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:0.95rem;text-transform:uppercase;" maxlength="2">
+      </div>`;
+      
+      html += `</div>`;
+      
+      /* Sports Grid */
+      html += `<div id="scSportsGrid" style="display:grid;gap:16px;"></div>`;
+      
+      container.innerHTML = html;
+      
+      /* Event listeners for filters */
+      document.getElementById('scYearGroup').addEventListener('change', updateSportControlsDisplay);
+      document.getElementById('scClassLetter').addEventListener('change', updateSportControlsDisplay);
+      document.getElementById('scClassLetter').addEventListener('input', updateSportControlsDisplay);
+      
+      function updateSportControlsDisplay() {
+        const yearGroup = document.getElementById('scYearGroup').value;
+        const classLetter = document.getElementById('scClassLetter').value.toUpperCase();
+        const sportsGrid = document.getElementById('scSportsGrid');
+        
+        if (!yearGroup || !classLetter) {
+          sportsGrid.innerHTML = `<p style="color:var(--text-2);">Select both Year Group and Class Letter to manage sports.</p>`;
+          return;
+        }
+        
+        const classKey = `class_${yearGroup}${classLetter}`;
+        const classConfig = sdkLoad('classSportsActive', classKey) || { classKey, yearGroup: parseInt(yearGroup), classLetter, activeSports: [] };
+        
+        let sportsHtml = `<div style="padding:16px;background:var(--surface-2);border-radius:8px;">`;
+        sportsHtml += `<h4 style="margin-bottom:16px;color:var(--accent);">Year ${yearGroup} - Class ${classLetter}</h4>`;
+        sportsHtml += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px;">`;
+        
+        allSports.forEach(sport => {
+          const isActive = classConfig.activeSports.includes(sport.key);
+          const toggleId = `sport_${classKey}_${sport.key}`;
+          
+          sportsHtml += `<div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">`;
+          sportsHtml += `<div style="display:flex;align-items:center;gap:8px;">`;
+          sportsHtml += `<span style="font-size:1.2rem;">${sport.emoji}</span>`;
+          sportsHtml += `<span style="color:var(--text);font-weight:500;">${sport.name}</span>`;
+          sportsHtml += `</div>`;
+          
+          /* Modern Toggle Switch */
+          sportsHtml += `<button class="sport-toggle" id="${toggleId}" data-class-key="${classKey}" data-sport="${sport.key}" data-active="${isActive}" style="width:48px;height:28px;border-radius:14px;border:2px solid ${isActive ? 'var(--accent)' : 'var(--border)'};background:${isActive ? 'var(--accent)' : 'var(--surface-2)'};cursor:pointer;transition:all 200ms ease;position:relative;overflow:hidden;">`;
+          sportsHtml += `<span style="position:absolute;${isActive ? 'right' : 'left'}:3px;top:50%;transform:translateY(-50%);display:inline-block;width:20px;height:20px;background:white;border-radius:50%;transition:all 200ms ease;"></span>`;
+          sportsHtml += `</button>`;
+          
+          sportsHtml += `</div>`;
+        });
+        
+        sportsHtml += `</div>`;
+        sportsHtml += `<button class="btn" style="background:var(--accent);color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;width:100%;" onclick="saveSportControlsForClass('${classKey}')">✓ Save Sports for Year ${yearGroup} - Class ${classLetter}</button>`;
+        sportsHtml += `</div>`;
+        
+        sportsGrid.innerHTML = sportsHtml;
+        
+        /* Attach toggle listeners */
+        document.querySelectorAll(`.sport-toggle[data-class-key="${classKey}"]`).forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const isCurrentActive = this.getAttribute('data-active') === 'true';
+            this.setAttribute('data-active', !isCurrentActive);
+            
+            /* Animate toggle */
+            const span = this.querySelector('span');
+            const newActive = !isCurrentActive;
+            this.style.background = newActive ? 'var(--accent)' : 'var(--surface-2)';
+            this.style.borderColor = newActive ? 'var(--accent)' : 'var(--border)';
+            span.style.right = newActive ? '3px' : 'auto';
+            span.style.left = newActive ? 'auto' : '3px';
+          });
+        });
+      }
+    }
+
+    function saveSportControlsForClass(classKey) {
+      const customSports = sdkLoadAll('sports') || [];
+      const allSports = [...SPORTS_LIST, ...customSports];
+      
+      const activeSports = [];
+      document.querySelectorAll(`.sport-toggle[data-class-key="${classKey}"]`).forEach(btn => {
+        if (btn.getAttribute('data-active') === 'true') {
+          activeSports.push(btn.getAttribute('data-sport'));
+        }
+      });
+      
+      /* Parse classKey to extract yearGroup and classLetter */
+      const match = classKey.match(/class_(\d+)([A-Z])/);
+      if (!match) {
+        console.error('[saveSportControlsForClass] Invalid classKey format:', classKey);
+        return;
+      }
+      
+      const yearGroup = parseInt(match[1]);
+      const classLetter = match[2];
+      
+      const data = { classKey, yearGroup, classLetter, activeSports };
+      sdkSave('classSportsActive', classKey, data);
+      
+      console.log(`[saveSportControlsForClass] Saved ${classKey}:`, {
+        activeSportsCount: activeSports.length,
+        activeSports: activeSports,
+        data: data
+      });
+      
+      /* Verify it was saved */
+      const verify = sdkLoad('classSportsActive', classKey);
+      console.log(`[saveSportControlsForClass] Verification for ${classKey}:`, verify);
+      
+      /* Manually refresh student app if viewing sports (same tab/window) */
+      const sportsSection = document.getElementById('sectionSports');
+      if (sportsSection && sportsSection.classList.contains('active')) {
+        console.log('[saveSportControlsForClass] Refreshing student sports grid after save...');
+        renderSportsGrid(currentStudentId);
+      }
+      
+      showToast(`Year ${yearGroup} - Class ${classLetter} sports updated! (${activeSports.length} active) ✓ Changes are live for students`);
+    }
+
+    /* =============================================
        STEP 19 - SKILL DEFINITIONS
        ============================================= */
     function renderSkillDefinitions() {
@@ -3113,13 +3923,18 @@
       const LEVELS = ['level1', 'level2', 'level3', 'level4'];
       const LEVEL_LABELS = { level1: 'Beginner', level2: 'Explorer', level3: 'Performer', level4: 'Champion' };
 
+      // Load custom sports from database
+      const customSports = sdkLoadAll('sports') || [];
+      const allSports = [...SPORTS_LIST, ...customSports];
+
       let html = `<h3 style="margin-bottom:12px;color:var(--text);">Skill Definitions</h3>`;
       html += `<div class="filter-bar">
         <select id="sdKsSelect">`;
       KEY_STAGES.forEach(ks => { html += `<option value="${ks}">${ks}</option>`; });
       html += `</select>
         <select id="sdSportSelect">`;
-      SPORTS_LIST.forEach(s => { html += `<option value="${s.key}">${s.emoji} ${s.name}</option>`; });
+      allSports.forEach(s => { html += `<option value="${s.key}">${s.emoji} ${s.name}</option>`; });
+      html += `<option value="addNewSport">➕ Add New Sport</option>`;
       html += `</select>
         <select id="sdCopyFrom"><option value="">Copy from...</option>`;
       KEY_STAGES.forEach(ks => { html += `<option value="${ks}">${ks}</option>`; });
@@ -3133,9 +3948,51 @@
       function loadAndRenderForm() {
         const ks = document.getElementById('sdKsSelect').value;
         const sport = document.getElementById('sdSportSelect').value;
+        if (sport === 'addNewSport') {
+          renderAddNewSportForm();
+          return;
+        }
         const defKey = `${ks}_${sport}`;
         const existing = sdkLoad('skillDefinitions', defKey);
         renderSkillDefForm(existing, defKey, ks, sport);
+      }
+
+      function renderAddNewSportForm() {
+        const fc = document.getElementById('sdFormContainer');
+        let fhtml = `<div class="skill-def-form">
+          <h4>Add New Sport</h4>
+          <div class="form-group">
+            <label>Sport Name</label>
+            <input type="text" id="newSportName" placeholder="e.g. Chess">
+          </div>
+          <div class="form-group">
+            <label>Emoji</label>
+            <input type="text" id="newSportEmoji" placeholder="e.g. ♟️" maxlength="2">
+          </div>
+          <button class="btn" id="addSportBtn" style="background:var(--accent);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:40px;">Add Sport</button>
+        </div>`;
+        fc.innerHTML = fhtml;
+
+        document.getElementById('addSportBtn').addEventListener('click', function() {
+          const name = document.getElementById('newSportName').value.trim();
+          const emoji = document.getElementById('newSportEmoji').value.trim();
+          if (!name || !emoji) {
+            showToast('Please fill in both name and emoji.');
+            return;
+          }
+          // Generate unique key
+          const key = name.toLowerCase().replace(/\s+/g, '');
+          const existing = allSports.find(s => s.key === key);
+          if (existing) {
+            showToast('A sport with this name already exists.');
+            return;
+          }
+          // Save to database
+          sdkSave('sports', key, { key, name, emoji });
+          showToast('New sport added successfully!');
+          // Re-render the section
+          renderSkillDefinitions();
+        });
       }
 
       function renderSkillDefForm(existing, defKey, ks, sport) {
@@ -3223,6 +4080,8 @@
     function renderWellDone() {
       const container = document.getElementById('tSectionWellDone');
       const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const logs = sdkLoadAll('wellDoneLogs') || [];
 
       /* Build unique class list */
       const classSet = new Set();
@@ -3265,6 +4124,27 @@
         </div>
         <button class="btn" id="wdAwardBtn" style="background:var(--accent);color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:600;cursor:pointer;min-height:48px;width:100%;">Award Points 🏅</button>
       </div>`;
+
+      /* Well Done Logs */
+      html += `<div style="margin-top:24px;">
+        <h3 style="margin-bottom:12px;color:var(--text);">📋 Well Done Log</h3>`;
+      if (logs.length === 0) {
+        html += `<p style="color:var(--text-2);font-style:italic;">No well done points awarded yet.</p>`;
+      } else {
+        logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(log => {
+          const teacher = allTeachers.find(t => t._id === log.teacherId);
+          const student = allStudents.find(s => s._id === log.studentId);
+          const teacherName = teacher ? `${teacher.firstName} ${teacher.familyName}` : 'Unknown Teacher';
+          const studentName = student ? `${student.firstName} ${student.familyName}` : 'Unknown Student';
+          const date = new Date(log.timestamp).toLocaleString();
+          html += `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;background:var(--surface-2);">
+            <div style="font-weight:600;color:var(--text);">${teacherName} → ${studentName}</div>
+            <div style="color:var(--text-2);font-size:0.85rem;">${log.points} HP - ${log.reason}</div>
+            <div style="color:var(--text-2);font-size:0.75rem;">${date}</div>
+          </div>`;
+        });
+      }
+      html += `</div>`;
 
       container.innerHTML = html;
 
@@ -3314,6 +4194,14 @@
             source: 'teacher_bonus',
             note: reason,
             date: new Date().toISOString()
+          });
+          /* Log the well done action */
+          sdkSave('wellDoneLogs', uuid(), {
+            teacherId: currentTeacherId,
+            studentId: sid,
+            points: points,
+            reason: reason,
+            timestamp: new Date().toISOString()
           });
         });
 
@@ -3405,6 +4293,8 @@
       const qp = student.quizProgress || { completedLevels: [], xpTotal: 0 };
       const quizLevelsCompleted = Array.isArray(qp.completedLevels) ? qp.completedLevels.length : (student.quizLevelsCompleted || 0);
 
+      const arenaStats = getArenaStats(student);
+
       const sp = student.sportProgress || {};
       let sportsCount = 0;
       let lessonsDone = 0;
@@ -3414,6 +4304,7 @@
         lessonsDone += (prog && prog.lessonsCompleted ? prog.lessonsCompleted.length : 0);
       });
 
+      document.getElementById('summaryArenaText').textContent = `${arenaStats.gloryPoints} GP \u00b7 ${arenaStats.wins} wins`;
       document.getElementById('summaryQuizText').textContent = `${quizLevelsCompleted} / 100 levels \u00b7 ${xp} XP total`;
       document.getElementById('summarySportsText').textContent = `${sportsCount} sport${sportsCount !== 1 ? 's' : ''} \u00b7 ${lessonsDone} lesson${lessonsDone !== 1 ? 's' : ''} done`;
       document.getElementById('summaryHPText').textContent = `${hp} pts \u00b7 Rank #${rank}`;
@@ -3433,9 +4324,14 @@
 
       /* Show section */
       document.querySelectorAll('.student-section').forEach(s => s.classList.remove('active'));
-      const sectionMap = { home: 'sectionHome', sports: 'sectionSports', quiz: 'sectionQuiz', housePoints: 'sectionHousePoints' };
+      const sectionMap = { home: 'sectionHome', arena: 'sectionArena', sports: 'sectionSports', quiz: 'sectionQuiz', housePoints: 'sectionHousePoints' };
       const target = document.getElementById(sectionMap[section]);
       if (target) target.classList.add('active');
+
+      /* Render arena when arena tab is clicked */
+      if (section === 'arena' && currentStudentId) {
+        renderArena(currentStudentId);
+      }
 
       /* Render sports grid when sports tab is clicked */
       if (section === 'sports' && currentStudentId) {
@@ -3547,6 +4443,214 @@
       }
       renderOnboardingStep();
     });
+
+    /* =============================================
+       ARENA & GHOST BATTLE - CONSTANTS & FUNCTIONS
+       ============================================= */
+    const MASTER_GHOSTS = [
+      { id: 'coachbot', name: 'Coach Bot', emoji: '🤖', gloryPoints: 75, level: 50 },
+      { id: 'proathlete', name: 'Pro Athlete', emoji: '🏆', gloryPoints: 85, level: 60 },
+      { id: 'shadowchampion', name: 'Shadow Champion', emoji: '👤', gloryPoints: 70, level: 45 },
+      { id: 'ghostmaster', name: 'Ghost Master', emoji: '👻', gloryPoints: 80, level: 55 }
+    ];
+
+    let currentArenaOpponent = null;
+    let currentArenaMatchQuestion = 0;
+    let arenaPlayerScore = 0;
+    let arenaOpponentScore = 0;
+    let arenaQuestionsUsed = [];
+
+    function getArenaStats(student) {
+      if (!student.gloryPoints) student.gloryPoints = 0;
+      if (!student.arenaWins) student.arenaWins = 0;
+      if (!student.arenaMatches) student.arenaMatches = [];
+      return { gloryPoints: student.gloryPoints, wins: student.arenaWins };
+    }
+
+    function setArenaStats(student, stats) {
+      student.gloryPoints = stats.gloryPoints;
+      student.arenaWins = stats.wins || 0;
+      sdkSave('students', student._id || currentStudentId, student);
+    }
+
+    function renderArena(studentId) {
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+
+      const stats = getArenaStats(student);
+      const mainView = document.getElementById('arenaMainView');
+
+      let html = '<div class="arena-stats">';
+      html += '<div class="arena-stat">';
+      html += '<div class="arena-stat-label">Glory Points</div>';
+      html += '<div class="arena-stat-value">' + stats.gloryPoints + '</div>';
+      html += '</div>';
+      html += '<div class="arena-stat">';
+      html += '<div class="arena-stat-label">Wins</div>';
+      html += '<div class="arena-stat-value">' + stats.wins + '</div>';
+      html += '</div>';
+      html += '</div>';
+
+      /* Find opponent - student with similar glory points +/- 5 */
+      const allStudents = sdkLoadAll('students') || [];
+      const potentialOpponents = allStudents.filter(s => {
+        const opp = getArenaStats(s);
+        const diff = Math.abs(opp.gloryPoints - stats.gloryPoints);
+        return s._id !== studentId && diff <= 5 && diff > 0;
+      });
+
+      let opponent = null;
+      if (potentialOpponents.length > 0) {
+        opponent = potentialOpponents[0];
+        opponent._isStudent = true;
+      } else {
+        /* Use master ghost */
+        const ghost = MASTER_GHOSTS[Math.floor(Math.random() * MASTER_GHOSTS.length)];
+        opponent = { ...ghost, _isGhost: true };
+      }
+
+      currentArenaOpponent = opponent;
+
+      /* Display matchup */
+      const oppStats = opponent._isGhost ? opponent : getArenaStats(opponent);
+      const oppName = opponent._isGhost ? opponent.name : `${opponent.firstName} ${opponent.familyName}`;
+      const oppGP = opponent._isGhost ? opponent.gloryPoints : oppStats.gloryPoints;
+
+      html += '<div class="arena-matchup">';
+      html += '<div class="arena-opponent">';
+      html += '<div style="font-size:2rem;margin-bottom:8px;">' + (opponent._isGhost ? opponent.emoji : '👤') + '</div>';
+      html += '<div class="arena-opponent-name">' + oppName + '</div>';
+      html += '<div class="arena-opponent-info">' + oppGP + ' GP</div>';
+      html += '</div>';
+      html += '<div class="arena-vs">⚔️</div>';
+      html += '<div class="arena-opponent">';
+      html += '<div style="font-size:2rem;margin-bottom:8px;">' + (student.house === 'Yellow' ? '💛' : student.house === 'Red' ? '❤️' : student.house === 'Green' ? '💚' : '💙') + '</div>';
+      html += '<div class="arena-opponent-name">You</div>';
+      html += '<div class="arena-opponent-info">' + stats.gloryPoints + ' GP</div>';
+      html += '</div>';
+      html += '</div>';
+
+      /* Challenge button */
+      html += '<button class="arena-battle-btn challenge" onclick="startArenaBattle()">Challenge Now</button>';
+
+      html += '<div style="padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);font-size:0.85rem;color:var(--text-2);">';
+      html += '<strong>How it Works:</strong><br>';
+      html += '• Answer 5 rapid-fire questions against your opponent<br>';
+      html += '• Win by getting more correct answers<br>';
+      html += '• Win: +1 Glory Point | Loss: -1 Glory Point<br>';
+      html += '• Timer increases with your level (Agility stat)<br>';
+      html += '</div>';
+
+      mainView.innerHTML = html;
+      document.getElementById('arenaResultsView').style.display = 'none';
+    }
+
+    function startArenaBattle() {
+      currentArenaMatchQuestion = 0;
+      arenaPlayerScore = 0;
+      arenaOpponentScore = 0;
+      arenaQuestionsUsed = [];
+
+      renderArenaBattleQuestion();
+    }
+
+    function renderArenaBattleQuestion() {
+      if (currentArenaMatchQuestion >= 5) {
+        completeArenaBattle();
+        return;
+      }
+
+      const topicIndex = Math.floor(Math.random() * 12);
+      const questions = QUIZ_QUESTIONS_DATA[topicIndex] || [];
+      let q = questions[Math.floor(Math.random() * questions.length)];
+
+      while (arenaQuestionsUsed.includes(q.text)) {
+        q = questions[Math.floor(Math.random() * questions.length)];
+      }
+      arenaQuestionsUsed.push(q.text);
+
+      const student = sdkLoad('students', currentStudentId);
+      const level = getLevel(student.xp || 0);
+      const baseTimer = 15 + (level - 1);
+
+      const mainView = document.getElementById('arenaMainView');
+      mainView.innerHTML = `
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:0.9rem;color:var(--text-2);margin-bottom:8px;">Question ${currentArenaMatchQuestion + 1} of 5</div>
+          <div class="arena-timer" id="arenaTimer">${baseTimer}s</div>
+        </div>
+        <div class="arena-question">
+          <div class="arena-question-text">${q.text}</div>
+          <div id="arenaOptions">
+            ${q.options.map((opt, i) => `<button class="quiz-option" style="width:100%;margin-bottom:8px;" onclick="handleArenaAnswer(${i}, ${q.correct})">${opt}</button>`).join('')}
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:var(--surface-2);border-radius:8px;font-size:0.8rem;color:var(--text-2);text-align:center;">
+          <strong>You: ${arenaPlayerScore}</strong> | <strong>Opponent: ${arenaOpponentScore}</strong>
+        </div>
+      `;
+
+      let timeLeft = baseTimer;
+      const timerInterval = setInterval(() => {
+        timeLeft--;
+        const timerEl = document.getElementById('arenaTimer');
+        if (timerEl) {
+          timerEl.textContent = timeLeft + 's';
+          if (timeLeft <= 3) timerEl.style.color = '#DC3545';
+        }
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          handleArenaAnswer(-1, q.correct);
+        }
+      }, 1000);
+    }
+
+    function handleArenaAnswer(selectedIdx, correct) {
+      if (selectedIdx === correct) {
+        arenaPlayerScore++;
+      }
+
+      /* Simulate opponent answering */
+      if (Math.random() < 0.7) {
+        arenaOpponentScore++;
+      }
+
+      currentArenaMatchQuestion++;
+      renderArenaBattleQuestion();
+    }
+
+    function completeArenaBattle() {
+      const student = sdkLoad('students', currentStudentId);
+      const stats = getArenaStats(student);
+      const won = arenaPlayerScore > arenaOpponentScore;
+
+      /* Update glory points */
+      if (won) {
+        stats.gloryPoints = Math.min(100, stats.gloryPoints + 1);
+        stats.wins = (stats.wins || 0) + 1;
+        setArenaStats(student, stats);
+      } else {
+        stats.gloryPoints = Math.max(0, stats.gloryPoints - 1);
+        setArenaStats(student, stats);
+      }
+
+      const resultsView = document.getElementById('arenaResultsView');
+      resultsView.style.display = '';
+      document.getElementById('arenaMainView').style.display = 'none';
+
+      let html = `<div class="arena-result-card">`;
+      html += `<div class="arena-result-big">${won ? '🏆' : '💪'}</div>`;
+      html += `<div class="arena-result-text">${won ? 'Victory!' : 'Defeat'}</div>`;
+      html += `<div style="margin:12px 0;font-size:1rem;">`;
+      html += `You: <strong>${arenaPlayerScore}</strong> | Opponent: <strong>${arenaOpponentScore}</strong>`;
+      html += `</div>`;
+      html += `<div class="arena-gp-change">${won ? '+1' : '-1'} Glory Point</div>`;
+      html += `<div style="margin-top:12px;color:var(--text-2);font-size:0.85rem;">Glory Points now: ${stats.gloryPoints} / 100</div>`;
+      html += `</div>`;
+      html += `<button class="btn btn-primary btn-block" onclick="renderArena(currentStudentId);document.getElementById('arenaResultsView').style.display='none';document.getElementById('arenaMainView').style.display='';">Back to Arena</button>`;
+
+      resultsView.innerHTML = html;
+    }
 
     /* =============================================
        SPORTS MODULE - CONSTANTS & FUNCTIONS
@@ -3987,6 +5091,52 @@
       }
     }
 
+    /* ---- getAvailableSports (filters by year group and class) ---- */
+    function getAvailableSports(student) {
+      const customSports = sdkLoadAll('sports') || [];
+      const allSports = [...SPORTS_LIST, ...customSports];
+      
+      if (!student) {
+        return allSports;
+      }
+      
+      /* Extract yearGroup and classLetter from student data */
+      let yearGroup = student.yearGroup;
+      let classLetter = student.classLetter;
+      
+      /* Fallback: parse from classGrade if yearGroup/classLetter missing */
+      if (!yearGroup || !classLetter) {
+        const classInfo = parseClassGrade(student.classGrade);
+        yearGroup = classInfo.yearGroup;
+        classLetter = classInfo.classLetter;
+      }
+      
+      if (!yearGroup || !classLetter) {
+        /* If still no year group or class, show no sports (all OFF by default) */
+        console.warn('[getAvailableSports] No year group or class letter found for student', student);
+        return [];
+      }
+      
+      const classKey = `class_${yearGroup}${classLetter}`;
+      const classConfig = sdkLoad('classSportsActive', classKey);
+      
+      console.log(`[getAvailableSports] Student ${student.firstName} (${student.classGrade}):`, {
+        classKey,
+        found: !!classConfig,
+        activeSports: classConfig?.activeSports || [],
+        allSportsCount: allSports.length
+      });
+      
+      if (!classConfig || !classConfig.activeSports || classConfig.activeSports.length === 0) {
+        /* If no config or no active sports, return empty array (all sports OFF by default) */
+        console.log(`[getAvailableSports] ${classKey}: No active sports configured`);
+        return [];
+      }
+      
+      /* Return only active sports */
+      return allSports.filter(s => classConfig.activeSports.includes(s.key));
+    }
+
     /* ---- renderSportsGrid ---- */
     function renderSportsGrid(studentId) {
       const student = sdkLoad('students', studentId);
@@ -4001,8 +5151,9 @@
       const startedCount = Object.keys(student.sportProgress).length;
       emptyState.style.display = startedCount === 0 ? '' : 'none';
 
+      const availableSports = getAvailableSports(student);
       let html = '';
-      SPORTS_LIST.forEach(sport => {
+      availableSports.forEach(sport => {
         const progress = student.sportProgress[sport.key];
         const lessonsCompleted = progress ? (progress.lessonsCompleted || []).length : 0;
         const fullyComplete = progress && progress.sportFullyComplete;
@@ -4784,6 +5935,10 @@
 
     document.getElementById('backToSportsGrid').addEventListener('click', backToSportsGridClick);
     document.getElementById('backToLessonGrid').addEventListener('click', backToLessonGridClick);
+    document.getElementById('refreshSportsBtn').addEventListener('click', function() {
+      console.log('[Student App] Refresh button clicked');
+      renderSportsGrid(currentStudentId);
+    });
 
     /* =============================================
        STEP 12-13 - QUIZ MODULE
@@ -4955,6 +6110,77 @@
     let quizCurrentQuestionIndex = 0;
     let quizCurrentScore = 0;
     let quizCurrentQuestions = [];
+    let quizHardMode = false;
+
+    function drawQuizPath(completedArray, currentLevel, svgEl, nodesData) {
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const completedSet = new Set(completedArray || []);
+      
+      /* Generate zigzag points (5 columns, alternating left-right) */
+      const points = [];
+      const spacing = 30; /* Gap between nodes in quiz-nodes-container */
+      const colWidth = 60; /* Approximate column width */
+      
+      for (let i = 0; i < nodesData.length; i++) {
+        const row = Math.floor(i / 5);
+        const colInRow = i % 5;
+        
+        /* Zigzag pattern: even rows left-to-right, odd rows right-to-left */
+        const isEvenRow = row % 2 === 0;
+        const col = isEvenRow ? colInRow : (4 - colInRow);
+        
+        const x = 50 + col * 50;
+        const y = 26 + row * spacing;
+        points.push(`${x},${y}`);
+      }
+      
+      /* Create polyline path */
+      const polyline = document.createElementNS(svgNS, 'polyline');
+      polyline.setAttribute('points', points.join(' '));
+      polyline.setAttribute('fill', 'none');
+      polyline.setAttribute('stroke', 'url(#quizPathGradient)');
+      polyline.setAttribute('stroke-width', '3');
+      polyline.setAttribute('stroke-linecap', 'round');
+      polyline.setAttribute('stroke-linejoin', 'round');
+      
+      /* Create animated gradient based on progress */
+      const defs = document.createElementNS(svgNS, 'defs');
+      const gradient = document.createElementNS(svgNS, 'linearGradient');
+      gradient.setAttribute('id', 'quizPathGradient');
+      gradient.setAttribute('x1', '0%');
+      gradient.setAttribute('y1', '0%');
+      gradient.setAttribute('x2', '0%');
+      gradient.setAttribute('y2', '100%');
+      
+      /* Color progression: completed = blue, current = gold, locked = gray */
+      const completedPct = completedArray.length / 100 * 100;
+      const currentPct = (currentLevel - 1) / 100 * 100;
+      
+      const stop1 = document.createElementNS(svgNS, 'stop');
+      stop1.setAttribute('offset', '0%');
+      stop1.setAttribute('stop-color', completedPct > 0 ? '#667EEA' : '#B0B0B0');
+      
+      const stop2 = document.createElementNS(svgNS, 'stop');
+      stop2.setAttribute('offset', `${completedPct}%`);
+      stop2.setAttribute('stop-color', '#667EEA');
+      
+      const stop3 = document.createElementNS(svgNS, 'stop');
+      stop3.setAttribute('offset', `${completedPct + 5}%`);
+      stop3.setAttribute('stop-color', '#F9A825');
+      
+      const stop4 = document.createElementNS(svgNS, 'stop');
+      stop4.setAttribute('offset', '100%');
+      stop4.setAttribute('stop-color', '#D4D7DE');
+      
+      gradient.appendChild(stop1);
+      gradient.appendChild(stop2);
+      gradient.appendChild(stop3);
+      gradient.appendChild(stop4);
+      
+      defs.appendChild(gradient);
+      svgEl.appendChild(defs);
+      svgEl.appendChild(polyline);
+    }
 
     function renderQuizMap(studentId) {
       const student = sdkLoad('students', studentId);
@@ -5017,11 +6243,31 @@
         }
       });
 
-      mapEl.innerHTML = orderedNodes.map(n => {
+      /* Create SVG container for path */
+      const svgNS = 'http://www.w3.org/2000/svg';
+      let svgEl = mapEl.querySelector('svg');
+      if (!svgEl) {
+        svgEl = document.createElementNS(svgNS, 'svg');
+        svgEl.setAttribute('viewBox', '0 0 300 3000');
+        svgEl.setAttribute('preserveAspectRatio', 'none');
+        mapEl.insertBefore(svgEl, mapEl.firstChild);
+      }
+      svgEl.innerHTML = '';
+
+      /* Create nodes container wrapper */
+      const nodesContainer = document.createElement('div');
+      nodesContainer.className = 'quiz-nodes-container';
+      nodesContainer.innerHTML = orderedNodes.map(n => {
         const onclick = n.clickable ? `onclick="startQuizLevel(${n.level})"` : '';
         const dataAttr = n.cls.includes('current') ? ' data-current="true"' : '';
         return `<div class="${n.cls}" ${onclick}${dataAttr}>${n.label}</div>`;
       }).join('');
+      mapEl.innerHTML = '';
+      mapEl.appendChild(svgEl);
+      mapEl.appendChild(nodesContainer);
+
+      /* Draw SVG path connecting all nodes */
+      drawQuizPath(completed, currentLevel, svgEl, orderedNodes);
 
       /* Scroll quiz map to show the current level node */
       requestAnimationFrame(function() {
@@ -5055,9 +6301,17 @@
           <div class="intro-quote">
             "${topic.quote}"<br><small>\u2014 ${topic.quoteAuthor}</small>
           </div>
-          <button class="btn btn-primary btn-block" onclick="renderQuizQuestion(${level}, 0)">Start Quiz \u2192</button>
+          <div style="display:flex;gap:12px;margin-top:20px;flex-direction:column;">
+            <button class="btn btn-primary btn-block" onclick="startQuizWithMode(${level}, false)">🎯 Normal Mode (80%+)</button>
+            <button class="btn btn-block" style="background:#E94B3C;color:white;border:none;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;" onclick="startQuizWithMode(${level}, true)">🔥 Hard Mode (10/10)</button>
+          </div>
         </div>
       `;
+    }
+
+    function startQuizWithMode(level, isHardMode) {
+      quizHardMode = isHardMode;
+      renderQuizQuestion(level, 0);
     }
 
     function renderQuizQuestion(level, questionIndex) {
@@ -5105,13 +6359,19 @@
 
       if (selectedIndex === q.correct) {
         quizCurrentScore++;
+      } else if (quizHardMode) {
+        /* Hard Mode: Single mistake = instant loss */
+        setTimeout(() => {
+          completeQuizLevel(level, 0, true);
+        }, 1500);
+        return;
       }
 
       document.getElementById('quizExplanation').style.display = 'block';
       document.getElementById('quizNextBtnContainer').style.display = '';
     }
 
-    function completeQuizLevel(level, score) {
+    function completeQuizLevel(level, score, isHardModeLoss = false) {
       const student = sdkLoad('students', currentStudentId);
       if (!student) return;
       if (!student.quizProgress) student.quizProgress = { completedLevels: [], xpTotal: 0, hpAwarded: 0 };
@@ -5121,7 +6381,7 @@
       let xpEarned = 0;
       let isFirstTime = false;
 
-      if (!student.quizProgress.completedLevels.includes(level)) {
+      if (!isHardModeLoss && !student.quizProgress.completedLevels.includes(level)) {
         student.quizProgress.completedLevels.push(level);
         student.quizProgress.xpTotal = (student.quizProgress.xpTotal || 0) + 10;
         student.xp = (student.xp || 0) + 10;
@@ -5131,21 +6391,30 @@
       }
 
       sdkSave('students', student._id || student.id || currentStudentId, student);
-      checkXPConversion(student);
-      checkAchievements(student);
+      if (!isHardModeLoss) {
+        checkXPConversion(student);
+        checkAchievements(student);
+      }
 
       let message = '';
-      if (pct === 100) message = 'Perfect score! Outstanding!';
-      else if (pct >= 80) message = 'Excellent work! Keep it up!';
-      else if (pct >= 60) message = 'Good effort! Review the topics you missed.';
-      else message = 'Keep practising \u2014 you will improve!';
+      if (isHardModeLoss) {
+        message = '❌ One mistake in Hard Mode! Try again \u2013 you can do it!';
+      } else if (pct === 100) {
+        message = quizHardMode ? '🔥 Perfect Hard Mode! Incredible!' : 'Perfect score! Outstanding!';
+      } else if (pct >= 80) {
+        message = 'Excellent work! Keep it up!';
+      } else if (pct >= 60) {
+        message = 'Good effort! Review the topics you missed.';
+      } else {
+        message = 'Keep practising \u2014 you will improve!';
+      }
 
       const content = document.getElementById('quizPlayContent');
       content.innerHTML = `
         <div class="quiz-results">
-          <div style="font-size:3rem;margin-bottom:12px;">${pct === 100 ? '\uD83C\uDFC6' : (pct >= 60 ? '\u2B50' : '\uD83D\uDCAA')}</div>
+          <div style="font-size:3rem;margin-bottom:12px;">${isHardModeLoss ? '\u26A0\uFE0F' : (pct === 100 ? '\uD83C\uDFC6' : (pct >= 60 ? '\u2B50' : '\uD83D\uDCAA'))}</div>
           <div class="score">${score} / ${total}</div>
-          <div class="xp-earned">${isFirstTime ? '+10 XP earned!' : 'Level already completed'}</div>
+          <div class="xp-earned">${isHardModeLoss ? 'Hard Mode Active - Restart to try again' : (isFirstTime ? '+10 XP earned!' : 'Level already completed')}</div>
           <div class="message">${message}</div>
           <button class="btn btn-primary btn-block" onclick="backToQuizMap()" style="margin-top:16px;">Back to Map</button>
         </div>
@@ -5451,7 +6720,14 @@
         { firstName: 'Gabriel', familyName: 'Okonkwo', gender: 'Male', house: 'Blue', classGrade: 'Year 10C' },
         { firstName: 'Hui Ying', familyName: 'Chua', gender: 'Female', house: 'Blue', classGrade: 'Year 10H' },
         { firstName: 'Rosa', familyName: 'Martinez', gender: 'Female', house: 'Blue', classGrade: 'Year 10C' },
-        { firstName: 'Sanjay', familyName: 'Mehta', gender: 'Male', house: 'Blue', classGrade: 'Year 10H' }
+        { firstName: 'Sanjay', familyName: 'Mehta', gender: 'Male', house: 'Blue', classGrade: 'Year 10H' },
+        /* Year 3 — Class I (Demo for testing) */
+        { firstName: 'Sophie', familyName: 'Brown', gender: 'Female', house: 'Yellow', classGrade: 'Year 3I' },
+        { firstName: 'Ethan', familyName: 'Smith', gender: 'Male', house: 'Yellow', classGrade: 'Year 3I' },
+        { firstName: 'Lily', familyName: 'Johnson', gender: 'Female', house: 'Red', classGrade: 'Year 3I' },
+        { firstName: 'Noah', familyName: 'Wilson', gender: 'Male', house: 'Red', classGrade: 'Year 3I' },
+        { firstName: 'Ava', familyName: 'Davis', gender: 'Female', house: 'Green', classGrade: 'Year 3I' },
+        { firstName: 'Liam', familyName: 'Miller', gender: 'Male', house: 'Green', classGrade: 'Year 3I' }
       ];
 
       seedStudents.forEach(function(s, idx) {
@@ -5464,6 +6740,11 @@
         const sportProgress = randomSportProgress();
         const hp = randomInt(3, 55);
         const emailName = s.firstName.toLowerCase().replace(/\s+/g, '');
+        
+        /* Parse classGrade using consistent utility */
+        const classInfo = parseClassGrade(s.classGrade);
+        const yearGroup = classInfo.yearGroup || yearNum;
+        const classLetter = classInfo.classLetter;
 
         const studentData = {
           firstName: s.firstName,
@@ -5476,6 +6757,8 @@
           house: s.house,
           classGrade: s.classGrade,
           yearNumber: yearNum,
+          yearGroup: yearGroup,
+          classLetter: classLetter,
           keyStage: keyStage,
           profilePic: makeAvatar(initials, s.house),
           activated: true,
