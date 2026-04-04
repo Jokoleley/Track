@@ -1940,6 +1940,41 @@
     .house-top10.open { display: block; }
     .house-top10 .top-student { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
 
+    /* Rivals Table */
+    .rivals-table {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .rival-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 80px 80px 120px;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 600px) {
+      .rival-row {
+        grid-template-columns: 50px 1fr 70px 70px 100px;
+        gap: 8px;
+        padding: 10px 12px;
+        font-size: 0.8rem;
+      }
+      .rival-status { font-size: 0.75rem; }
+    }
+    .rival-row:last-child { border-bottom: none; }
+    .rival-row.current-user {
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .rival-rank { font-weight: 700; color: var(--text-2); }
+    .rival-name { font-weight: 500; }
+    .rival-house { font-weight: 600; }
+    .rival-points { text-align: right; font-weight: 600; }
+    .rival-status { text-align: right; font-size: 0.8rem; color: var(--text-2); }
+
     .hp-personal {
       background: var(--surface);
       border-radius: 12px;
@@ -4411,6 +4446,7 @@
 
         /* 2-4. Award HP */
         const freshStudent = sdkLoad('students', studentId);
+        const oldRank = checkRankImprovement(studentId, Infinity); // Get current rank before awarding
         freshStudent.housePoints = (freshStudent.housePoints || 0) + totalPoints;
         sdkSave('housePointEvents', uuid(), {
           studentId: studentId,
@@ -4420,6 +4456,9 @@
           date: new Date().toISOString()
         });
         sdkSave('students', freshStudent._id || studentId, freshStudent);
+        
+        /* Check for rank improvement */
+        checkRankImprovement(studentId, oldRank);
 
         /* 5. Mark related notifications as read */
         const allNotifs = sdkLoadAll('teacherNotifications') || [];
@@ -5003,6 +5042,7 @@
 
         targetStudents.forEach(s => {
           const sid = s._id || s.id;
+          const oldRank = checkRankImprovement(sid, Infinity); // Get current rank before awarding
           s.housePoints = (s.housePoints || 0) + points;
           sdkSave('students', sid, s);
           sdkSave('housePointEvents', uuid(), {
@@ -5012,6 +5052,8 @@
             note: reason,
             date: new Date().toISOString()
           });
+          /* Check for rank improvement */
+          checkRankImprovement(sid, oldRank);
           /* Log the well done action */
           sdkSave('wellDoneLogs', uuid(), {
             teacherId: currentTeacherId,
@@ -6058,6 +6100,7 @@
       const hpAlreadyAwarded = student.quizProgress.hpAwarded || 0;
       const newHP = hpFromXP - hpAlreadyAwarded;
       if (newHP > 0) {
+        const oldRank = checkRankImprovement(student._id || student.id, Infinity); // Get current rank before awarding
         student.housePoints = (student.housePoints || 0) + newHP;
         student.quizProgress.hpAwarded = hpFromXP;
         for (let i = 0; i < newHP; i++) {
@@ -6067,6 +6110,8 @@
           });
         }
         sdkSave('students', student._id || student.id, student);
+        /* Check for rank improvement */
+        checkRankImprovement(student._id || student.id, oldRank);
       }
     }
 
@@ -7409,6 +7454,59 @@
     /* =============================================
        STEP 14 - HOUSE POINTS MODULE
        ============================================= */
+    function getClosestRivals(studentId) {
+      const allStudents = sdkLoadAll('students');
+      const sortedStudents = allStudents.slice().sort((a, b) => (b.housePoints || 0) - (a.housePoints || 0));
+      
+      const studentIndex = sortedStudents.findIndex(s => s._id === studentId);
+      if (studentIndex === -1) return [];
+      
+      const start = Math.max(0, studentIndex - 3);
+      const end = Math.min(sortedStudents.length, studentIndex + 4); // +4 to include up to 3 after
+      
+      const rivals = sortedStudents.slice(start, end);
+      
+      return rivals.map((s, idx) => {
+        const actualRank = start + idx + 1;
+        const currentStudentPoints = sortedStudents[studentIndex].housePoints || 0;
+        const rivalPoints = s.housePoints || 0;
+        return {
+          rank: actualRank,
+          student: s,
+          isCurrentUser: s._id === studentId,
+          pointDifference: s._id === studentId ? 0 : currentStudentPoints - rivalPoints
+        };
+      });
+    }
+
+    function checkRankImprovement(studentId, oldRank) {
+      const allStudents = sdkLoadAll('students');
+      const sortedStudents = allStudents.slice().sort((a, b) => (b.housePoints || 0) - (a.housePoints || 0));
+      const newRank = sortedStudents.findIndex(s => s._id === studentId) + 1;
+      
+      if (newRank < oldRank && newRank > 0) {
+        // Rank improved - find who was overtaken
+        let overtakenName = '';
+        if (oldRank <= sortedStudents.length) {
+          const overtakenStudent = sortedStudents[oldRank - 1];
+          if (overtakenStudent && overtakenStudent._id !== studentId) {
+            overtakenName = `${overtakenStudent.firstName} ${overtakenStudent.familyName}`;
+          }
+        }
+        
+        // Points to next
+        const pointsLeft = newRank > 1 ? (sortedStudents[newRank - 2].housePoints || 0) - (sortedStudents[newRank - 1].housePoints || 0) : 0;
+        const nextName = newRank > 1 ? `${sortedStudents[newRank - 2].firstName} ${sortedStudents[newRank - 2].familyName}` : 'the top';
+        
+        const overtookText = overtakenName ? `You just overtook ${overtakenName} and ` : '';
+        const nextText = pointsLeft > 0 ? ` Only ${pointsLeft} points left to catch ${nextName}!` : '';
+        
+        showToast(`🔥 Rank Up! ${overtookText}moved into #${newRank} place!${nextText}`);
+      }
+      
+      return newRank;
+    }
+
     function renderHousePoints(studentId) {
       const student = sdkLoad('students', studentId);
       if (!student) return;
@@ -7458,6 +7556,46 @@
         `;
       });
       html += '</div>';
+
+      /* Your Closest Rivals Card */
+      const rivals = getClosestRivals(studentId);
+      if (rivals.length > 0) {
+        html += '<div class="card" style="margin-top:20px;">';
+        html += '<h3 style="margin-bottom:16px;font-size:1.1rem;">🎯 Your Closest Rivals</h3>';
+        html += '<div class="rivals-table">';
+        
+        rivals.forEach(rival => {
+          const isCurrentUser = rival.isCurrentUser;
+          const houseColor = houseColors[rival.student.house] || '#666';
+          const bgColor = isCurrentUser ? houseColor : 'transparent';
+          const textColor = isCurrentUser ? '#fff' : 'var(--text)';
+          
+          let statusText = '';
+          if (isCurrentUser) {
+            statusText = 'YOU / Current';
+          } else if (rival.pointDifference > 0) {
+            // Above current user - find the closest one above
+            const aboveRivals = rivals.filter(r => !r.isCurrentUser && r.pointDifference > 0).sort((a, b) => a.rank - b.rank);
+            const isNextTarget = aboveRivals.length > 0 && rival.rank === aboveRivals[0].rank;
+            statusText = isNextTarget ? 'Next Target' : `+${rival.pointDifference} HP to catch`;
+          } else {
+            statusText = '—';
+          }
+          
+          html += `
+            <div class="rival-row ${isCurrentUser ? 'current-user' : ''}" style="background:${bgColor};color:${textColor};">
+              <div class="rival-rank">#${rival.rank}</div>
+              <div class="rival-name">${rival.student.firstName} ${rival.student.familyName}</div>
+              <div class="rival-house" style="color:${houseColor};">${rival.student.house}</div>
+              <div class="rival-points">${rival.student.housePoints || 0} HP</div>
+              <div class="rival-status">${statusText}</div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+        html += '</div>';
+      }
 
       /* Personal summary */
       const myHP = student.housePoints || 0;
