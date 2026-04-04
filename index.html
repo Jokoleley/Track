@@ -2694,9 +2694,16 @@
           </div>
 
           <div class="form-group">
-            <label for="srStudentId">Student ID</label>
+            <label for="srStudentId">Student ID (For System)</label>
             <input type="text" id="srStudentId" class="form-input" placeholder="Enter unique student ID" required>
             <div class="form-error" id="srStudentIdErr">Student ID is required and must be unique.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="srAuthId">🔐 Authorized ID (Required)</label>
+            <input type="text" id="srAuthId" class="form-input" placeholder="Enter your Authorized ID" required>
+            <div class="form-error" id="srAuthIdErr">Authorized ID is required (provided by House Team Manager).</div>
+            <small style="color:var(--text-2);font-size:0.8rem;margin-top:4px;">This ID must be on the approved list from your House Team Manager.</small>
           </div>
 
           <div class="form-group">
@@ -2831,9 +2838,16 @@
           </div>
 
           <div class="form-group">
-            <label for="trTeacherId">Teacher ID</label>
+            <label for="trTeacherId">Teacher ID (For System)</label>
             <input type="text" id="trTeacherId" class="form-input" placeholder="Enter unique Teacher ID" required>
             <div class="form-error" id="trTeacherIdErr">Teacher ID is required and must be unique.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="trAuthId">🔐 Authorized ID (Required)</label>
+            <input type="text" id="trAuthId" class="form-input" placeholder="Enter your Authorized ID" required>
+            <div class="form-error" id="trAuthIdErr">Authorized ID is required (provided by House Team Manager).</div>
+            <small style="color:var(--text-2);font-size:0.8rem;margin-top:4px;">This ID must be on the approved list from your House Team Manager.</small>
           </div>
 
           <div class="form-group">
@@ -3078,6 +3092,7 @@
       <button class="nav-item" data-section="settings">⚙️ Settings</button>
       <button class="nav-item admin-nav-item" data-section="seasonManagement">📅 Season Management</button>
       <button class="nav-item admin-nav-item" data-section="userManagement">👥 User Management</button>
+      <button class="nav-item admin-nav-item" data-section="idManagement">🔐 ID Management</button>
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
@@ -3089,6 +3104,7 @@
       <div class="teacher-section" id="tSectionSettings"></div>
       <div class="teacher-section admin-section" id="tSectionSeasonManagement"></div>
       <div class="teacher-section admin-section" id="tSectionUserManagement"></div>
+      <div class="teacher-section admin-section" id="tSectionIdManagement"></div>
     </div>
   </div>
 
@@ -3326,6 +3342,60 @@
       if (y >= 10 && y <= 11) return 'KS4';
       if (y >= 12 && y <= 13) return 'KS5';
       return 'Unknown';
+    }
+
+    /* =============================================
+       ID VALIDATION & GATEKEEPER SYSTEM
+       ============================================= */
+    async function validateAuthorizedId(idValue, userType) {
+      // userType: 'student' or 'teacher'
+      if (!idValue || !idValue.trim()) {
+        return { valid: false, error: 'ID is required' };
+      }
+      
+      const trimmedId = idValue.trim().toUpperCase();
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      
+      if (!authorizedRecord) {
+        return { valid: false, error: 'This ID is not recognized. Please contact your House Team Manager.' };
+      }
+      
+      // Check if ID type matches (student/teacher)
+      if (authorizedRecord.type !== userType) {
+        return { valid: false, error: `This ID is registered for ${authorizedRecord.type}s, not ${userType}s.` };
+      }
+      
+      // Check if already registered
+      if (authorizedRecord.registered) {
+        return { valid: false, error: 'This ID has already been registered.' };
+      }
+      
+      // Valid - return preset names if available
+      return { 
+        valid: true, 
+        presetFirstName: authorizedRecord.presetFirstName || '',
+        presetLastName: authorizedRecord.presetLastName || ''
+      };
+    }
+
+    function linkAuthorizedId(idValue, userType, userId) {
+      // Update the authorized record to mark as registered
+      const trimmedId = idValue.trim().toUpperCase();
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      
+      if (!authorizedRecord) return false;
+      
+      authorizedRecord.registered = true;
+      authorizedRecord.lastAttempt = new Date().toISOString();
+      
+      if (userType === 'student') {
+        authorizedRecord.linkedStudentId = userId;
+      } else if (userType === 'teacher') {
+        authorizedRecord.linkedTeacherId = userId;
+      }
+      
+      sdkSave('authorizedIds', trimmedId, authorizedRecord);
+      return true;
     }
 
     /* =============================================
@@ -4333,6 +4403,7 @@
       const familyName = document.getElementById('srFamilyName').value.trim();
       const email = document.getElementById('srEmail').value.trim();
       const studentId = document.getElementById('srStudentId').value.trim();
+      const authId = document.getElementById('srAuthId').value.trim();
       const password = document.getElementById('srPassword').value;
       const confirmPassword = document.getElementById('srConfirmPassword').value;
       const gender = document.querySelector('input[name="srGender"]:checked');
@@ -4345,6 +4416,7 @@
       if (!familyName) { showError('srFamilyNameErr'); valid = false; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('srEmailErr'); valid = false; }
       if (!studentId) { showError('srStudentIdErr'); valid = false; }
+      if (!authId) { showError('srAuthIdErr'); valid = false; }
 
       /* Check unique Student ID */
       if (studentId) {
@@ -4363,6 +4435,37 @@
       if (!classGrade) { showError('srClassErr'); valid = false; }
 
       if (!valid) return;
+
+      /* *** GATEKEEPER: Validate Authorized ID *** */
+      const authValidation = await validateAuthorizedId(authId, 'student');
+      if (!authValidation.valid) {
+        /* Show error and option to request authorization */
+        const errorElement = document.getElementById('srAuthIdErr');
+        errorElement.textContent = authValidation.error;
+        errorElement.style.display = 'block';
+        
+        /* Add button to request authorization */
+        const requestBtn = document.createElement('button');
+        requestBtn.type = 'button';
+        requestBtn.className = 'btn btn-secondary';
+        requestBtn.textContent = '📧 Request Authorization';
+        requestBtn.style.marginTop = '8px';
+        requestBtn.style.width = '100%';
+        requestBtn.onclick = () => {
+          sendIdAuthorizationRequest(firstName, familyName, email, authId);
+        };
+        errorElement.parentElement.appendChild(requestBtn);
+        return;
+      }
+      
+      /* Auto-populate name from preset if available (but allow override) */
+      const finalFirstName = firstName || authValidation.presetFirstName || '';
+      const finalLastName = familyName || authValidation.presetLastName || '';
+      
+      if (!finalFirstName || !finalLastName) {
+        showToast('❌ Name is required. Either enter it or use preset from authorized ID.');
+        return;
+      }
 
       /* Parse classGrade using consistent utility */
       const classInfo = parseClassGrade(classGrade);
@@ -4388,10 +4491,11 @@
       /* Save student */
       const id = uuid();
       const studentData = {
-        firstName,
-        familyName,
+        firstName: finalFirstName,
+        familyName: finalLastName,
         email,
         studentId,
+        authorizedId: authId.toUpperCase(),
         password: hashedPassword,
         gender: gender.value,
         school,
@@ -4432,7 +4536,12 @@
         classLetter: studentData.classLetter
       });
 
+      /* Save student */
       sdkSave('students', id, studentData);
+      
+      /* Link the authorized ID to this student account */
+      linkAuthorizedId(authId, 'student', id);
+      
       sendActivationEmail(email, uuid());
       showToast('Account created successfully! ✓');
       saveSession(id, 'student');
@@ -4487,6 +4596,7 @@
       const firstName = document.getElementById('trFirstName').value.trim();
       const familyName = document.getElementById('trFamilyName').value.trim();
       const teacherId = document.getElementById('trTeacherId').value.trim();
+      const authId = document.getElementById('trAuthId').value.trim();
       const email = document.getElementById('trEmail').value.trim();
       const managerCode = document.getElementById('trManagerCode').value.trim();
       const password = document.getElementById('trPassword').value;
@@ -4496,6 +4606,7 @@
       if (!firstName) { showError('trFirstNameErr'); valid = false; }
       if (!familyName) { showError('trFamilyNameErr'); valid = false; }
       if (!teacherId) { showError('trTeacherIdErr'); valid = false; }
+      if (!authId) { showError('trAuthIdErr'); valid = false; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('trEmailErr'); valid = false; }
       if (!password || password.length < 6) { showError('trPasswordErr'); valid = false; }
       if (password !== confirmPassword) { showError('trConfirmPasswordErr'); valid = false; }
@@ -4510,6 +4621,13 @@
       }
 
       if (!valid) return;
+
+      /* *** GATEKEEPER: Validate Authorized ID *** */
+      const authValidation = await validateAuthorizedId(authId, 'teacher');
+      if (!authValidation.valid) {
+        showError('trAuthIdErr', authValidation.error);
+        return;
+      }
 
       /* Validate manager code if provided */
       let isManager = false;
@@ -4537,6 +4655,7 @@
         firstName,
         familyName,
         teacherId,
+        authorizedId: authId.toUpperCase(),
         email,
         password: hashedPassword,
         activated: true,
@@ -4547,6 +4666,10 @@
       };
 
       sdkSave('teachers', id, teacherData);
+      
+      /* Link the authorized ID to this teacher account */
+      linkAuthorizedId(authId, 'teacher', id);
+      
       sendActivationEmail(email, uuid());
       
       if (isManager) {
@@ -4730,6 +4853,10 @@
       else if (section === 'userManagement') {
         document.getElementById('tSectionUserManagement').classList.add('active');
         renderUserManagementPanel();
+      }
+      else if (section === 'idManagement') {
+        document.getElementById('tSectionIdManagement').classList.add('active');
+        renderIdManagementPanel();
       }
     });
 
@@ -5911,6 +6038,22 @@
           <p style="margin:8px 0;color:var(--text-2);">
             <strong style="color:var(--text);">Created:</strong> ${new Date(currentTeacher.createdAt).toLocaleDateString()}
           </p>
+        </div>
+        
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="color:var(--text);margin-bottom:12px;font-size:1.1rem;">🔐 Authorized ID</h3>
+          
+          ${currentTeacher.authorizedId ? `
+            <div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);">
+              <div style="font-weight:600;color:var(--accent);font-size:1.1rem;">${currentTeacher.authorizedId}</div>
+              <div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">✅ Your account is authorized and active</div>
+            </div>
+          ` : `
+            <div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;">
+              <div style="color:#ff4444;font-weight:600;">⚠️ No Authorized ID linked</div>
+              <div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Contact your House Team Manager to get an authorized ID</div>
+            </div>
+          `}
         </div>
         
         <div class="card" style="margin-bottom:20px;">
@@ -9267,6 +9410,310 @@
       return newRank;
     }
 
+    /* =============================================
+       ADMIN RENDER: ID MANAGEMENT DASHBOARD
+       ============================================= */
+    function renderIdManagementPanel() {
+      const container = document.getElementById('tSectionIdManagement');
+      const currentTeacher = sdkLoad('teachers', currentTeacherId);
+      
+      if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
+        container.innerHTML = '<p style="color:var(--text-2);">Access denied.</p>';
+        return;
+      }
+      
+      const allAuthorizedIds = sdkLoadAll('authorizedIds') || [];
+      
+      let html = `<div class="admin-panel">
+        <h3 style="margin-bottom:20px;">🔐 ID Management - Register & Authorize Students/Teachers</h3>
+        
+        <!-- CSV Upload Section -->
+        <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:12px;">📤 Bulk Upload Authorized IDs</h4>
+          <p style="color:var(--text-2);font-size:0.9rem;margin-bottom:12px;">Upload a CSV file with the following columns (case-insensitive):</p>
+          <code style="background:var(--surface);padding:8px;border-radius:4px;font-size:0.85rem;display:block;margin-bottom:12px;">ID, Type, FirstName, LastName</code>
+          <p style="color:var(--text-2);font-size:0.85rem;margin-bottom:12px;"><strong>Example:</strong></p>
+          <code style="background:var(--surface);padding:8px;border-radius:4px;font-size:0.75rem;display:block;margin-bottom:12px;">S001, student, John, Doe
+T001, teacher, Jane, Smith</code>
+          
+          <div class="form-group">
+            <label for="idCsvUpload">Choose CSV File</label>
+            <input type="file" id="idCsvUpload" accept=".csv" class="form-input" style="cursor:pointer;">
+            <button onclick="processIdCsvUpload()" class="btn btn-primary" style="width:100%;margin-top:8px;">📤 Upload IDs</button>
+          </div>
+        </div>
+        
+        <!-- Add Single ID Section -->
+        <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:12px;">➕ Add Single Authorized ID</h4>
+          <div class="form-group">
+            <label for="newIdValue">ID Value</label>
+            <input type="text" id="newIdValue" class="form-input" placeholder="e.g., S001, T001" style="text-transform:uppercase;">
+          </div>
+          <div class="form-group">
+            <label for="newIdType">User Type</label>
+            <select id="newIdType" class="form-select">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="newIdFirstName">First Name (Optional)</label>
+            <input type="text" id="newIdFirstName" class="form-input" placeholder="Preset first name">
+          </div>
+          <div class="form-group">
+            <label for="newIdLastName">Last Name (Optional)</label>
+            <input type="text" id="newIdLastName" class="form-input" placeholder="Preset last name">
+          </div>
+          <button onclick="addSingleAuthorizedId()" class="btn btn-primary" style="width:100%;">➕ Add ID</button>
+        </div>
+        
+        <!-- ID List & Management -->
+        <div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:12px;">📋 Authorized IDs (${allAuthorizedIds.length})</h4>
+          
+          <div class="form-group">
+            <input type="text" id="idSearchFilter" class="form-input" placeholder="Search ID, name..." style="margin-bottom:12px;">
+            <select id="idTypeFilter" class="form-select" style="margin-bottom:12px;">
+              <option value="">All Types</option>
+              <option value="student">Students</option>
+              <option value="teacher">Teachers</option>
+            </select>
+            <select id="idStatusFilter" class="form-select">
+              <option value="">All Status</option>
+              <option value="available">Available (Not Registered)</option>
+              <option value="registered">Registered</option>
+            </select>
+          </div>
+          
+          <div id="idListContainer" style="max-height:600px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;">
+            ${renderIdList(allAuthorizedIds)}
+          </div>
+        </div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      /* Add event listeners for filters */
+      const applyIdFilters = () => {
+        const searchVal = document.getElementById('idSearchFilter').value.toLowerCase();
+        const typeVal = document.getElementById('idTypeFilter').value;
+        const statusVal = document.getElementById('idStatusFilter').value;
+        
+        let filtered = allAuthorizedIds.filter(id => {
+          let match = true;
+          if (searchVal) {
+            const searchText = `${id.idValue} ${id.presetFirstName} ${id.presetLastName}`.toLowerCase();
+            match = searchText.includes(searchVal);
+          }
+          if (typeVal && id.type !== typeVal) match = false;
+          if (statusVal === 'available' && id.registered) match = false;
+          if (statusVal === 'registered' && !id.registered) match = false;
+          return match;
+        });
+        
+        document.getElementById('idListContainer').innerHTML = renderIdList(filtered);
+      };
+      
+      document.getElementById('idSearchFilter').addEventListener('input', applyIdFilters);
+      document.getElementById('idTypeFilter').addEventListener('change', applyIdFilters);
+      document.getElementById('idStatusFilter').addEventListener('change', applyIdFilters);
+    }
+
+    function renderIdList(authorizedIds) {
+      if (authorizedIds.length === 0) {
+        return '<div style="padding:20px;text-align:center;color:var(--text-2);">No authorized IDs found.</div>';
+      }
+      
+      return authorizedIds.map(id => {
+        const statusIcon = id.registered ? '✅' : '⭕';
+        const statusText = id.registered ? 'Registered' : 'Available';
+        const linkedName = id.linkedStudentId || id.linkedTeacherId ? '(Active)' : '';
+        const presetName = id.presetFirstName || id.presetLastName ? `${id.presetFirstName || ''} ${id.presetLastName || ''}`.trim() : 'No preset';
+        
+        return `<div style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:600;color:var(--accent);">${id.idValue}</div>
+            <div style="font-size:0.85rem;color:var(--text-2);">Type: <strong>${id.type}</strong> · Preset: <strong>${presetName}</strong></div>
+            <div style="font-size:0.85rem;color:var(--text-2);">Status: ${statusIcon} <strong>${statusText}</strong> ${linkedName}</div>
+            ${id.lastAttempt ? `<div style="font-size:0.8rem;color:var(--text-3);">Last attempt: ${new Date(id.lastAttempt).toLocaleString()}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="editAuthorizedId('${id.idValue}')" class="btn" style="padding:6px 12px;font-size:0.85rem;">✏️ Edit</button>
+            <button onclick="deleteAuthorizedId('${id.idValue}')" class="btn" style="padding:6px 12px;font-size:0.85rem;background:#ff4444;color:#fff;">🗑️ Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function addSingleAuthorizedId() {
+      const idValue = document.getElementById('newIdValue').value.trim().toUpperCase();
+      const idType = document.getElementById('newIdType').value;
+      const firstName = document.getElementById('newIdFirstName').value.trim();
+      const lastName = document.getElementById('newIdLastName').value.trim();
+      
+      if (!idValue) {
+        showToast('❌ ID value is required');
+        return;
+      }
+      
+      /* Check if ID already exists */
+      const existing = sdkLoad('authorizedIds', idValue);
+      if (existing) {
+        showToast('❌ This ID already exists');
+        return;
+      }
+      
+      const authData = {
+        _id: idValue,
+        idValue: idValue,
+        type: idType,
+        presetFirstName: firstName,
+        presetLastName: lastName,
+        registered: false,
+        createdAt: new Date().toISOString(),
+        lastAttempt: null
+      };
+      
+      sdkSave('authorizedIds', idValue, authData);
+      showToast(`✅ ID "${idValue}" added successfully`);
+      
+      /* Clear form */
+      document.getElementById('newIdValue').value = '';
+      document.getElementById('newIdFirstName').value = '';
+      document.getElementById('newIdLastName').value = '';
+      document.getElementById('newIdType').value = 'student';
+      
+      /* Re-render */
+      renderIdManagementPanel();
+    }
+
+    function processIdCsvUpload() {
+      const fileInput = document.getElementById('idCsvUpload');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        showToast('❌ Please select a CSV file');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        let addedCount = 0;
+        let errorCount = 0;
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          const [idVal, type, firstName, lastName] = line.split(',').map(s => s.trim());
+          
+          if (!idVal || !type) {
+            errorCount++;
+            continue;
+          }
+          
+          const idValue = idVal.toUpperCase();
+          const userType = type.toLowerCase();
+          
+          /* Validate type */
+          if (userType !== 'student' && userType !== 'teacher') {
+            errorCount++;
+            continue;
+          }
+          
+          /* Check if ID already exists */
+          const existing = sdkLoad('authorizedIds', idValue);
+          if (existing) {
+            errorCount++;
+            continue;
+          }
+          
+          const authData = {
+            _id: idValue,
+            idValue: idValue,
+            type: userType,
+            presetFirstName: firstName || '',
+            presetLastName: lastName || '',
+            registered: false,
+            createdAt: new Date().toISOString(),
+            lastAttempt: null
+          };
+          
+          sdkSave('authorizedIds', idValue, authData);
+          addedCount++;
+        }
+        
+        showToast(`✅ Imported ${addedCount} IDs${errorCount > 0 ? `, ${errorCount} errors` : ''}`);
+        fileInput.value = '';
+        renderIdManagementPanel();
+      };
+      
+      reader.readAsText(file);
+    }
+
+    function editAuthorizedId(idValue) {
+      const authRecord = sdkLoad('authorizedIds', idValue);
+      if (!authRecord) return;
+      
+      const newFirstName = prompt('First Name:', authRecord.presetFirstName || '');
+      if (newFirstName === null) return; /* User cancelled */
+      
+      const newLastName = prompt('Last Name:', authRecord.presetLastName || '');
+      if (newLastName === null) return; /* User cancelled */
+      
+      authRecord.presetFirstName = newFirstName;
+      authRecord.presetLastName = newLastName;
+      
+      sdkSave('authorizedIds', idValue, authRecord);
+      showToast('✅ ID updated');
+      renderIdManagementPanel();
+    }
+
+    function deleteAuthorizedId(idValue) {
+      const authRecord = sdkLoad('authorizedIds', idValue);
+      if (!authRecord) return;
+      
+      if (!confirm(`Delete ID "${idValue}"? This action cannot be undone.`)) return;
+      
+      sdkDelete('authorizedIds', idValue);
+      showToast('✅ ID deleted');
+      renderIdManagementPanel();
+    }
+
+    function sendIdAuthorizationRequest(firstName, familyName, email, requestedId) {
+      const manager = getHouseTeamManager();
+      if (!manager) {
+        showToast('❌ No House Team Manager found. Please contact your school.');
+        return;
+      }
+      
+      const notifId = uuid();
+      const notif = {
+        _id: notifId,
+        managerId: manager._id,
+        type: 'id_authorization_request',
+        status: 'pending',
+        studentFirstName: firstName,
+        studentLastName: familyName,
+        studentEmail: email,
+        requestedId: requestedId.trim().toUpperCase(),
+        message: `${firstName} ${familyName} (${email}) is requesting authorization for ID: ${requestedId}`,
+        createdAt: new Date().toISOString(),
+        read: false
+      };
+      
+      sdkSave('teacherNotifications', notifId, notif);
+      showToast('✅ Authorization request sent to House Team Manager');
+      
+      /* Clear form after request */
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+    }
+
     function renderHousePoints(studentId) {
       const student = sdkLoad('students', studentId);
       if (!student) return;
@@ -9459,6 +9906,24 @@
       html += `<input type="file" id="studentProfilePicCamera" accept="image/*" capture="user" class="form-input" style="cursor:pointer;">`;
       html += `<button onclick="updateStudentProfilePicture(true)" class="btn btn-primary" style="width:100%;margin-top:8px;">📸 Take Photo</button>`;
       html += `</div>`;
+      
+      html += `</div>`;
+
+      /* Authorized ID Section */
+      html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
+      html += `<h3 style="margin-bottom:12px;font-size:1rem;">🔐 Authorized ID</h3>`;
+      
+      if (student.authorizedId) {
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);">`;
+        html += `<div style="font-weight:600;color:var(--accent);font-size:1.1rem;">${student.authorizedId}</div>`;
+        html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">✅ Your account is authorized and active</div>`;
+        html += `</div>`;
+      } else {
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;">`;
+        html += `<div style="color:#ff4444;font-weight:600;">⚠️ No Authorized ID linked</div>`;
+        html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Contact your House Team Manager to get an authorized ID</div>`;
+        html += `</div>`;
+      }
       
       html += `</div>`;
 
