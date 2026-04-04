@@ -1893,6 +1893,145 @@
       text-align: center;
       font-weight: 600;
     }
+    
+    /* Bulk Assessment Matrix Styles */
+    .bulk-assessment-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .bulk-assessment-table thead {
+      background: var(--surface-2);
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .bulk-assessment-table th {
+      padding: 12px 8px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.85rem;
+      border-right: 1px solid var(--border);
+    }
+    
+    .bulk-assessment-table th:last-child {
+      border-right: none;
+    }
+    
+    .bulk-assessment-table th.student-col {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--surface-2);
+      z-index: 10;
+      min-width: 150px;
+      border-right: 2px solid var(--border);
+    }
+    
+    .skill-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .skill-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .bulk-assessment-table td {
+      padding: 12px 8px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .bulk-assessment-table td:last-child {
+      border-right: none;
+    }
+    
+    .bulk-assessment-table td.student-col {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+      z-index: 9;
+      min-width: 150px;
+      font-weight: 500;
+      border-right: 2px solid var(--border);
+    }
+    
+    .level-selector {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .level-btn {
+      min-width: 30px;
+      height: 30px;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 2px solid;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .level-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .level-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .skill-col {
+      min-width: 140px;
+    }
+    
+    /* Mobile responsiveness for bulk assessment */
+    @media (max-width: 1024px) {
+      .skill-header {
+        font-size: 0.75rem;
+      }
+      
+      .level-btn {
+        min-width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .bulk-assessment-table th,
+      .bulk-assessment-table td {
+        padding: 8px 4px;
+      }
+      
+      .level-btn {
+        min-width: 20px;
+        height: 20px;
+        padding: 1px 2px;
+        font-size: 0.65rem;
+      }
+      
+      .bulk-assessment-table th.student-col {
+        min-width: 100px;
+      }
+      
+      .bulk-assessment-table td.student-col {
+        min-width: 100px;
+      }
+    }
     .assessment-warning {
       font-size: 0.75rem;
       color: var(--text-2);
@@ -2931,6 +3070,7 @@
     </div>
     <nav class="teacher-nav" id="teacherNav">
       <button class="nav-item active" data-section="classOverview">📋 Class Overview</button>
+      <button class="nav-item" data-section="bulkAssessment">📊 Bulk Assessment</button>
       <button class="nav-item" data-section="skillDefs">✏️ Skill Definitions</button>
       <button class="nav-item" data-section="sportControls">⚙️ Sport Controls</button>
       <button class="nav-item" data-section="approvals">✅ Approvals</button>
@@ -2941,6 +3081,7 @@
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
+      <div class="teacher-section" id="tSectionBulkAssessment"></div>
       <div class="teacher-section" id="tSectionSkillDefs"></div>
       <div class="teacher-section" id="tSectionSportControls"></div>
       <div class="teacher-section" id="tSectionApprovals"></div>
@@ -4567,6 +4708,10 @@
       btn.classList.add('active');
       document.querySelectorAll('.teacher-section').forEach(s => s.classList.remove('active'));
       if (section === 'classOverview') document.getElementById('tSectionClassOverview').classList.add('active');
+      else if (section === 'bulkAssessment') {
+        document.getElementById('tSectionBulkAssessment').classList.add('active');
+        renderBulkAssessmentMatrix();
+      }
       else if (section === 'skillDefs') document.getElementById('tSectionSkillDefs').classList.add('active');
       else if (section === 'sportControls') document.getElementById('tSectionSportControls').classList.add('active');
       else if (section === 'approvals') {
@@ -5855,6 +6000,298 @@
           showTeacherApp(currentTeacherId);
         });
       }
+    }
+
+    /* =============================================
+       BULK ASSESSMENT MATRIX
+       ============================================= */
+    function renderBulkAssessmentMatrix() {
+      const container = document.getElementById('tSectionBulkAssessment');
+      
+      let html = `<div style="max-width:1400px;">
+        <h2 style="color:var(--text);margin-bottom:20px;">📊 Bulk Assessment Matrix (Lesson 10)</h2>
+        
+        <div class="filter-bar">
+          <select id="baFilterYear">
+            <option value="">Select Year Group</option>`;
+      for (let y = 1; y <= 13; y++) html += `<option value="${y}">Year ${y}</option>`;
+      html += `</select>
+          <select id="baFilterClass">
+            <option value="">Select Class Letter</option>
+            <option value="C">C</option>
+            <option value="H">H</option>
+            <option value="I">I</option>
+            <option value="S">S</option>
+            <option value="J">J</option>
+            <option value="B">B</option>
+          </select>
+          <select id="baSportSelect">
+            <option value="">Select Sport</option>`;
+      SPORTS_LIST.forEach(s => html += `<option value="${s.key}">${s.emoji} ${s.name}</option>`);
+      html += `</select>
+        </div>
+        
+        <div id="baMatrixContainer" style="margin-top:20px;"></div>
+      </div>`;
+      
+      container.innerHTML = html;
+      
+      document.getElementById('baFilterYear').addEventListener('change', () => applyBulkAssessmentFilters());
+      document.getElementById('baFilterClass').addEventListener('change', () => applyBulkAssessmentFilters());
+      document.getElementById('baSportSelect').addEventListener('change', () => applyBulkAssessmentFilters());
+    }
+
+    function applyBulkAssessmentFilters() {
+      const year = document.getElementById('baFilterYear').value;
+      const classLetter = document.getElementById('baFilterClass').value;
+      const sportKey = document.getElementById('baSportSelect').value;
+      const matrixContainer = document.getElementById('baMatrixContainer');
+      
+      if (!year || !classLetter || !sportKey) {
+        matrixContainer.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:40px 20px;">Please select Year Group, Class Letter, and Sport to begin.</p>';
+        return;
+      }
+      
+      /* Get students for this class */
+      const allStudents = sdkLoadAll('students') || [];
+      const classGrade = `Year ${year} ${classLetter}`;
+      const students = allStudents.filter(s => s.classGrade === classGrade);
+      
+      if (students.length === 0) {
+        matrixContainer.innerHTML = '<p style="color:var(--text-2);text-align:center;padding:40px 20px;">No students found in this class.</p>';
+        return;
+      }
+      
+      /* Get skill definitions - calculate keystage from selected year */
+      const keystage = getKeyStage(year);
+      const defKey = `${keystage}_${sportKey}`;
+      const skillDef = sdkLoad('skillDefinitions', defKey);
+      
+      if (!skillDef || !skillDef.motor1) {
+        matrixContainer.innerHTML = `<p style="color:var(--text-2);text-align:center;padding:40px 20px;">No skill definitions found for <strong>${keystage}</strong> / <strong>${sportKey}</strong>. Please set up skills in Skill Definitions first.</p>`;
+        return;
+      }
+      
+      /* Transform skill definitions from slot-based to array-based format */
+      const SKILL_SLOTS = ['motor1', 'motor2', 'motor3', 'methodological', 'social'];
+      const skills = SKILL_SLOTS.map(slot => ({
+        _id: slot,
+        name: skillDef[slot]?.name || slot,
+        slot: slot,
+        levels: ['1', '2', '3', '4'],
+        descriptions: [
+          skillDef[slot]?.['level1'] || '',
+          skillDef[slot]?.['level2'] || '',
+          skillDef[slot]?.['level3'] || '',
+          skillDef[slot]?.['level4'] || ''
+        ]
+      })).filter(s => s.name && s.name.trim() !== '');
+      const sport = SPORTS_LIST.find(s => s.key === sportKey);
+      const colors = ['#ff4444', '#ffb700', '#90ee90', '#228b22']; /* Red, Yellow, Light Green, Deep Green */
+      
+      let html = `<div style="overflow-x:auto;">
+        <table class="bulk-assessment-table">
+          <thead>
+            <tr>
+              <th class="student-col">Student Name</th>`;
+      
+      skills.forEach(skill => {
+        html += `<th class="skill-col">
+          <div class="skill-header">
+            <div class="skill-name">${skill.name}</div>
+            <button class="btn btn-sm" id="setAllBtn_${skill._id}" style="margin-top:6px;padding:4px 8px;font-size:0.75rem;">Set All</button>
+          </div>
+        </th>`;
+      });
+      
+      html += `</tr>
+          </thead>
+          <tbody id="baMatrixBody">`;
+      
+      /* Add student rows */
+      students.forEach(student => {
+        html += `<tr data-student-id="${student._id}">
+          <td class="student-col"><strong>${student.firstName} ${student.familyName}</strong></td>`;
+        
+        skills.forEach(skill => {
+          /* Get existing assessment level */
+          const compositeId = `${student._id}_${sportKey}_teacher`;
+          const assessment = sdkLoad('assessments', compositeId);
+          const existingLevel = assessment?.skills?.find(s => s.name === skill.name)?.level || 0;
+          
+          html += `<td class="skill-cell">
+            <div class="level-selector" data-student-id="${student._id}" data-skill-name="${skill.name}" data-sport-key="${sportKey}">`;
+          
+          /* 4-level buttons with color coding */
+          const colors = ['#ff4444', '#ffb700', '#90ee90', '#228b22']; /* Red, Yellow, Light Green, Deep Green */
+          const labels = ['1', '2', '3', '4'];
+          const levelNames = ['Beginner', 'Explorer', 'Performer', 'Champion'];
+          
+          labels.forEach((label, idx) => {
+            const level = idx + 1;
+            const isActive = existingLevel === level;
+            const color = colors[idx];
+            const bgColor = isActive ? color : 'var(--surface-2)';
+            const textColor = isActive ? '#fff' : 'var(--text)';
+            
+            html += `<button class="level-btn" data-level="${level}" style="background:${bgColor};color:${textColor};border:2px solid ${color};flex:1;padding:8px;border-radius:6px;font-weight:${isActive ? '700' : '500'};cursor:pointer;transition:0.2s;" title="${levelNames[idx]}">
+              ${label}
+            </button>`;
+          });
+          
+          html += `</div>
+          </td>`;
+        });
+        
+        html += `</tr>`;
+      });
+      
+      html += `</tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top:20px;padding:16px;background:var(--surface-2);border-radius:8px;">
+        <p style="color:var(--text-2);margin-bottom:12px;">
+          <strong style="color:var(--text);">💡 Running Total:</strong> <span id="hpTotalPreview">0 HP</span> to be awarded
+        </p>
+        <button class="btn btn-primary" id="submitBulkBtn" style="min-height:48px;padding:12px 24px;font-weight:600;">
+          ✅ Submit Assessments & Update House Points
+        </button>
+      </div>`;
+      
+      matrixContainer.innerHTML = html;
+      
+      /* Setup level button handlers */
+      document.querySelectorAll('.level-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const level = parseInt(this.getAttribute('data-level'));
+          const selector = this.closest('.level-selector');
+          const studentId = selector.getAttribute('data-student-id');
+          const skillName = selector.getAttribute('data-skill-name');
+          const sportKey = selector.getAttribute('data-sport-key');
+          
+          /* Update UI */
+          selector.querySelectorAll('.level-btn').forEach((b, idx) => {
+            const lvl = idx + 1;
+            const color = colors[idx];
+            if (lvl === level) {
+              b.style.background = color;
+              b.style.color = '#fff';
+              b.style.fontWeight = '700';
+            } else {
+              b.style.background = 'var(--surface-2)';
+              b.style.color = 'var(--text)';
+              b.style.fontWeight = '500';
+            }
+          });
+          
+          /* Real-time save */
+          saveBulkAssessmentLevel(studentId, sportKey, skillName, level);
+          updateHPPreview();
+        });
+      });
+      
+        skills.forEach(skill => {
+        const setAllBtn = document.getElementById(`setAllBtn_${skill._id}`);
+        if (setAllBtn) {
+          setAllBtn.addEventListener('click', function() {
+            /* Prompt teacher for level */
+            const levelStr = prompt('Set all students to level (1-4):');
+            if (!levelStr) return;
+            const level = parseInt(levelStr);
+            if (isNaN(level) || level < 1 || level > 4) {
+              showToast('❌ Invalid level. Use 1-4.');
+              return;
+            }
+            
+            /* Apply to all students */
+            document.querySelectorAll(`[data-skill-name="${skill.name}"]`).forEach(selector => {
+              const studentId = selector.getAttribute('data-student-id');
+              const buttons = selector.querySelectorAll('.level-btn');
+              buttons.forEach((btn, idx) => {
+                const lvl = idx + 1;
+                const color = colors[idx];
+                if (lvl === level) {
+                  btn.style.background = color;
+                  btn.style.color = '#fff';
+                  btn.style.fontWeight = '700';
+                } else {
+                  btn.style.background = 'var(--surface-2)';
+                  btn.style.color = 'var(--text)';
+                  btn.style.fontWeight = '500';
+                }
+              });
+              /* Save each student */
+              saveBulkAssessmentLevel(studentId, sportKey, skill.name, level, skill);
+            });
+            
+            updateHPPreview();
+            showToast(`✅ Set all students to Level ${level}`);
+          });
+        }
+      });
+      
+      /* Submit button */
+      document.getElementById('submitBulkBtn').addEventListener('click', function() {
+        showToast('✅ All assessments saved with real-time updates!');
+      });
+      
+      /* Helper to update HP preview */
+      function updateHPPreview() {
+        let totalHP = 0;
+        document.querySelectorAll('.level-selector').forEach(selector => {
+          const activeBtn = selector.querySelector('.level-btn[style*="color: rgb(255, 255, 255)"], .level-btn[style*="color: #fff"]');
+          if (activeBtn) {
+            const level = parseInt(activeBtn.getAttribute('data-level'));
+            totalHP += level;
+          }
+        });
+        document.getElementById('hpTotalPreview').textContent = `${totalHP} HP`;
+      }
+      
+      updateHPPreview();
+    }
+
+    function saveBulkAssessmentLevel(studentId, sportKey, skillName, level) {
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+      
+      const sport = SPORTS_LIST.find(s => s.key === sportKey);
+      if (!sport) return;
+      
+      /* Composite ID for teacher assessment */
+      const compositeId = `${studentId}_${sportKey}_teacher`;
+      let assessment = sdkLoad('assessments', compositeId) || {
+        _id: compositeId,
+        studentId: studentId,
+        sportKey: sportKey,
+        lessonNum: 10,
+        source: 'teacher',
+        skills: [],
+        submittedAt: new Date().toISOString()
+      };
+      
+      /* Update or add skill */
+      const existingSkillIdx = assessment.skills.findIndex(s => s.name === skillName);
+      if (existingSkillIdx >= 0) {
+        assessment.skills[existingSkillIdx].level = level;
+      } else {
+        assessment.skills.push({
+          name: skillName,
+          level: level,
+          skillName: skillName
+        });
+      }
+      
+      /* Save assessment */
+      sdkSave('assessments', compositeId, assessment);
+      
+      /* Update House Points: Sum all skill levels from this assessment */
+      const totalHPForAssessment = assessment.skills.reduce((sum, s) => sum + (s.level || 0), 0);
+      
+      /* Update student house points */
+      student.housePoints = (student.housePoints || 0) + (level);
+      sdkSave('students', studentId, student);
     }
 
     /* =============================================
