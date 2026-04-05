@@ -3345,6 +3345,21 @@
     }
 
     /* =============================================
+       GLOBAL ID ENFORCEMENT TOGGLE MANAGEMENT
+       ============================================= */
+    function getEnforceIdToggle() {
+      const settings = sdkLoad('globalSettings', 'idEnforcement') || { enforceIdToggle: false };
+      return settings.enforceIdToggle === true; // Default to false (OFF = flexible mode)
+    }
+
+    function setEnforceIdToggle(enabled) {
+      const settings = { enforceIdToggle: enabled };
+      sdkSave('globalSettings', 'idEnforcement', settings);
+      console.log('[ID Enforcement Toggle] Set to:', enabled ? 'ON (Strict)' : 'OFF (Flexible)');
+      return enabled;
+    }
+
+    /* =============================================
        ID VALIDATION & GATEKEEPER SYSTEM
        ============================================= */
     async function validateAuthorizedId(idValue, userType) {
@@ -3354,10 +3369,29 @@
       }
       
       const trimmedId = idValue.trim().toUpperCase();
+      const enforceIdToggle = getEnforceIdToggle();
+      
+      // Check if ID is already in use (duplicate prevention - ALWAYS enforced)
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const isDuplicate = allStudents.some(s => s.studentId === trimmedId || s.authorizedId === trimmedId) ||
+                          allTeachers.some(t => t.teacherId === trimmedId || t.authorizedId === trimmedId);
+      
+      if (isDuplicate) {
+        return { valid: false, error: 'This ID is already in use by another user.' };
+      }
+      
+      // If toggle is OFF, accept any ID
+      if (!enforceIdToggle) {
+        console.log('[ID Validation] Toggle OFF - accepting any unique ID');
+        return { valid: true, presetFirstName: '', presetLastName: '' };
+      }
+      
+      // Toggle is ON - validate against Authorized_IDs whitelist
       const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
       
       if (!authorizedRecord) {
-        return { valid: false, error: 'This ID is not recognized. Please contact your House Team Manager.' };
+        return { valid: false, error: 'ID not recognized. Please check for typos or contact your PE Teacher.' };
       }
       
       // Check if ID type matches (student/teacher)
@@ -3379,22 +3413,29 @@
     }
 
     function linkAuthorizedId(idValue, userType, userId) {
-      // Update the authorized record to mark as registered
+      // Update the authorized record to mark as registered (only if toggle is ON)
       const trimmedId = idValue.trim().toUpperCase();
-      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      const enforceIdToggle = getEnforceIdToggle();
       
-      if (!authorizedRecord) return false;
-      
-      authorizedRecord.registered = true;
-      authorizedRecord.lastAttempt = new Date().toISOString();
-      
-      if (userType === 'student') {
-        authorizedRecord.linkedStudentId = userId;
-      } else if (userType === 'teacher') {
-        authorizedRecord.linkedTeacherId = userId;
+      if (enforceIdToggle) {
+        const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+        
+        if (!authorizedRecord) return false;
+        
+        authorizedRecord.registered = true;
+        authorizedRecord.lastAttempt = new Date().toISOString();
+        
+        if (userType === 'student') {
+          authorizedRecord.linkedStudentId = userId;
+        } else if (userType === 'teacher') {
+          authorizedRecord.linkedTeacherId = userId;
+        }
+        
+        sdkSave('authorizedIds', trimmedId, authorizedRecord);
+        return true;
       }
       
-      sdkSave('authorizedIds', trimmedId, authorizedRecord);
+      // Toggle is OFF - no need to update authorized record
       return true;
     }
 
@@ -9446,9 +9487,30 @@
       }
       
       const allAuthorizedIds = sdkLoadAll('authorizedIds') || [];
+      const enforceIdToggle = getEnforceIdToggle();
       
       let html = `<div class="admin-panel">
         <h3 style="margin-bottom:20px;">🔐 ID Management - Register & Authorize Students/Teachers</h3>
+        
+        <!-- Global ID Enforcement Toggle Section -->
+        <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:2px solid ${enforceIdToggle ? 'var(--accent)' : '#ff9500'};box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="margin:0;font-size:1rem;">🔒 Enforce Pre-Authorized ID List</h4>
+            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="enforceIdToggle" ${enforceIdToggle ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;">
+              <span id="toggleStatus" style="font-weight:600;font-size:1rem;color:${enforceIdToggle ? 'var(--accent)' : '#ff9500'};">${enforceIdToggle ? '✅ ON (Strict)' : '⚠️ OFF (Flexible)'}</span>
+            </label>
+          </div>
+          <p style="color:var(--text-2);font-size:0.9rem;margin:0 0 12px 0;line-height:1.5;">
+            <strong>When ON (✅):</strong> Students and teachers can only register with IDs from the authorized list below.<br/>
+            <strong>When OFF (⚠️):</strong> Any user can register with any ID (but IDs must still be unique).
+          </p>
+          <div style="padding:12px;background:var(--surface);border-radius:4px;border-left:3px solid ${enforceIdToggle ? 'var(--accent)' : '#ff9500'};">
+            <p style="font-size:0.85rem;color:var(--text-2);margin:0;">
+              ${enforceIdToggle ? '🔐 <strong>STRICT MODE</strong><br/>Only pre-registered users can join this system.' : '🔓 <strong>FLEXIBLE MODE</strong><br/>Any user can register (duplicates still prevented).'}
+            </p>
+          </div>
+        </div>
         
         <!-- CSV Upload Section -->
         <div style="margin-bottom:30px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
@@ -9513,9 +9575,57 @@ T001, teacher, Jane, Smith</code>
             ${renderIdList(allAuthorizedIds)}
           </div>
         </div>
+        
+        <!-- Manager Dashboard: Validated IDs, Invalid IDs, Unregistered Users -->
+        <div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+          <h4 style="margin-bottom:16px;">📊 ID Management Dashboard</h4>
+          
+          <!-- Dashboard Tabs -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--border);flex-wrap:wrap;">
+            <button onclick="switchDashboardTab('validated')" id="dashTab-validated" class="btn" style="padding:8px 16px;border:none;border-bottom:3px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-weight:600;">✅ Validated IDs</button>
+            <button onclick="switchDashboardTab('invalid')" id="dashTab-invalid" class="btn" style="padding:8px 16px;border:none;border-bottom:3px solid transparent;background:transparent;color:var(--text-2);cursor:pointer;font-weight:600;">❌ Invalid IDs</button>
+            <button onclick="switchDashboardTab('unregistered')" id="dashTab-unregistered" class="btn" style="padding:8px 16px;border:none;border-bottom:3px solid transparent;background:transparent;color:var(--text-2);cursor:pointer;font-weight:600;">👤 Unregistered Users</button>
+          </div>
+          
+          <!-- Filters -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <select id="dashFilterUserType" onchange="updateDashboard()" class="form-select" style="font-size:0.9rem;">
+              <option value="">All User Types</option>
+              <option value="student">Students Only</option>
+              <option value="teacher">Teachers Only</option>
+            </select>
+            <select id="dashFilterYearGroup" onchange="updateDashboard()" class="form-select" style="font-size:0.9rem;">
+              <option value="">All Year Groups (Students)</option>
+              <option value="1">Year 1</option>
+              <option value="2">Year 2</option>
+              <option value="3">Year 3</option>
+              <option value="4">Year 4</option>
+              <option value="5">Year 5</option>
+              <option value="6">Year 6</option>
+              <option value="7">Year 7</option>
+              <option value="8">Year 8</option>
+              <option value="9">Year 9</option>
+              <option value="10">Year 10</option>
+              <option value="11">Year 11</option>
+              <option value="12">Year 12</option>
+              <option value="13">Year 13</option>
+            </select>
+            <input type="text" id="dashSearchText" onkeyup="updateDashboard()" class="form-input" placeholder="Search name or ID..." style="font-size:0.9rem;grid-column:1/3;">
+          </div>
+          
+          <!-- Dashboard Content -->
+          <div id="dashboardContent" style="min-height:300px;max-height:600px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;padding:12px;background:var(--surface);">
+            Loading dashboard data...
+          </div>
+        </div>
       </div>`;
       
       container.innerHTML = html;
+      
+      /* Initialize dashboard */
+      setTimeout(() => {
+        updateDashboard();
+      }, 100);
       
       /* Add event listeners for filters */
       const applyIdFilters = () => {
@@ -9541,6 +9651,42 @@ T001, teacher, Jane, Smith</code>
       document.getElementById('idSearchFilter').addEventListener('input', applyIdFilters);
       document.getElementById('idTypeFilter').addEventListener('change', applyIdFilters);
       document.getElementById('idStatusFilter').addEventListener('change', applyIdFilters);
+      
+      /* Add event listener for the global ID enforcement toggle */
+      const enforceIdToggleCheckbox = document.getElementById('enforceIdToggle');
+      if (enforceIdToggleCheckbox) {
+        enforceIdToggleCheckbox.addEventListener('change', function() {
+          const isEnabled = this.checked;
+          const currentState = getEnforceIdToggle();
+          
+          /* Show confirmation dialog */
+          const message = isEnabled ? 
+            'ID Management: TURN ON\n\n✅ Students and teachers will now ONLY be able to register with pre-authorized IDs from the list below.\n\nAre you sure?' :
+            'ID Management: TURN OFF\n\n⚠️ Students and teachers will now be able to register with ANY ID (though IDs must still be unique).\n\nAre you sure?';
+          
+          if (confirm(message)) {
+            setEnforceIdToggle(isEnabled);
+            
+            /* Update UI */
+            const statusSpan = document.getElementById('toggleStatus');
+            if (statusSpan) {
+              statusSpan.textContent = isEnabled ? '✅ ON (Strict)' : '⚠️ OFF (Flexible)';
+              statusSpan.style.color = isEnabled ? 'var(--accent)' : '#ff9500';
+            }
+            
+            /* Show toast */
+            const toastMsg = isEnabled ? 
+              '✅ ID Management is now ON (Strict Mode)' :
+              '⚠️ ID Management is now OFF (Flexible Mode)';
+            showToast(toastMsg);
+            
+            console.log('[ID Enforcement] Toggled to:', isEnabled ? 'ON' : 'OFF');
+          } else {
+            /* Revert checkbox if user cancelled */
+            this.checked = currentState;
+          }
+        });
+      }
     }
 
     function renderIdList(authorizedIds) {
@@ -9567,6 +9713,185 @@ T001, teacher, Jane, Smith</code>
           </div>
         </div>`;
       }).join('');
+    }
+
+    /* =============================================
+       MANAGER DASHBOARD: ID Management Analytics
+       ============================================= */
+    let currentDashboardTab = 'validated';
+
+    function switchDashboardTab(tabName) {
+      currentDashboardTab = tabName;
+      
+      /* Update tab buttons */
+      ['validated', 'invalid', 'unregistered'].forEach(tab => {
+        const btn = document.getElementById(`dashTab-${tab}`);
+        if (btn) {
+          if (tab === tabName) {
+            btn.style.borderBottomColor = 'var(--accent)';
+            btn.style.color = 'var(--accent)';
+          } else {
+            btn.style.borderBottomColor = 'transparent';
+            btn.style.color = 'var(--text-2)';
+          }
+        }
+      });
+      
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      const userTypeFilter = document.getElementById('dashFilterUserType')?.value || '';
+      const yearGroupFilter = document.getElementById('dashFilterYearGroup')?.value || '';
+      const searchText = document.getElementById('dashSearchText')?.value.toLowerCase() || '';
+      
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const allAuthorizedIds = sdkLoadAll('authorizedIds') || [];
+      
+      let html = '';
+      
+      if (currentDashboardTab === 'validated') {
+        // Validated IDs: Users WITH linked IDs
+        const validatedUsers = [];
+        
+        allStudents.forEach(student => {
+          if ((userTypeFilter === '' || userTypeFilter === 'student') &&
+              (yearGroupFilter === '' || student.yearGroup?.toString() === yearGroupFilter) &&
+              student.authorizedId &&
+              (searchText === '' || 
+               student.firstName.toLowerCase().includes(searchText) ||
+               student.familyName.toLowerCase().includes(searchText) ||
+               student.authorizedId.toLowerCase().includes(searchText))) {
+            validatedUsers.push({
+              type: 'student',
+              name: `${student.firstName} ${student.familyName}`,
+              id: student.authorizedId,
+              yearGroup: student.yearGroup,
+              classGrade: student.classGrade,
+              house: student.house,
+              linkedAt: student.createdAt
+            });
+          }
+        });
+        
+        allTeachers.forEach(teacher => {
+          if ((userTypeFilter === '' || userTypeFilter === 'teacher') &&
+              teacher.authorizedId &&
+              (searchText === '' || 
+               teacher.firstName.toLowerCase().includes(searchText) ||
+               teacher.familyName.toLowerCase().includes(searchText) ||
+               teacher.authorizedId.toLowerCase().includes(searchText))) {
+            validatedUsers.push({
+              type: 'teacher',
+              name: `${teacher.firstName} ${teacher.familyName}`,
+              id: teacher.authorizedId,
+              linkedAt: teacher.createdAt
+            });
+          }
+        });
+        
+        if (validatedUsers.length === 0) {
+          html = '<div style="padding:20px;text-align:center;color:var(--text-2);">No validated IDs found.</div>';
+        } else {
+          html = `<div style="font-size:0.9rem;"><strong>${validatedUsers.length} User(s) with Valid IDs</strong></div>`;
+          validatedUsers.forEach(user => {
+            const icon = user.type === 'student' ? '👤' : '👨‍🏫';
+            const details = user.type === 'student' ? 
+              `${user.classGrade ? '📚 ' + user.classGrade + ' ' : ''}${user.house ? '🏠 ' + user.house : ''}`.trim() :
+              '👨‍🏫 Teacher';
+            html += `<div style="padding:10px;margin-top:8px;background:var(--surface-2);border-radius:6px;border-left:3px solid var(--accent);">
+              <div style="font-weight:600;">✅ ${user.name} (${user.id})</div>
+              <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">${icon} ${details}</div>
+            </div>`;
+          });
+        }
+        
+      } else if (currentDashboardTab === 'invalid') {
+        // Invalid IDs: Authorized IDs NOT yet registered
+        const invalidIds = allAuthorizedIds.filter(id =>
+          !id.registered &&
+          (userTypeFilter === '' || id.type === userTypeFilter) &&
+          (searchText === '' || 
+           id.idValue.toLowerCase().includes(searchText) ||
+           (id.presetFirstName + ' ' + id.presetLastName).toLowerCase().includes(searchText))
+        );
+        
+        if (invalidIds.length === 0) {
+          html = '<div style="padding:20px;text-align:center;color:var(--text-2);">All authorized IDs are claimed!</div>';
+        } else {
+          html = `<div style="font-size:0.9rem;"><strong>${invalidIds.length} Unclaimed ID(s)</strong></div>`;
+          invalidIds.forEach(id => {
+            const presetName = id.presetFirstName || id.presetLastName ?
+              `${id.presetFirstName} ${id.presetLastName}`.trim() : 'No preset';
+            html += `<div style="padding:10px;margin-top:8px;background:var(--surface-2);border-radius:6px;border-left:3px solid #ff9500;">
+              <div style="font-weight:600;">⚠️ ${id.idValue}</div>
+              <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">Type: ${id.type === 'student' ? '👤 Student' : '👨‍🏫 Teacher'} | Preset: ${presetName}</div>
+            </div>`;
+          });
+        }
+        
+      } else if (currentDashboardTab === 'unregistered') {
+        // Unregistered Users: Users with NO ID
+        const unregisteredUsers = [];
+        
+        allStudents.forEach(student => {
+          if ((userTypeFilter === '' || userTypeFilter === 'student') &&
+              (yearGroupFilter === '' || student.yearGroup?.toString() === yearGroupFilter) &&
+              !student.authorizedId &&
+              (searchText === '' || 
+               student.firstName.toLowerCase().includes(searchText) ||
+               student.familyName.toLowerCase().includes(searchText) ||
+               student.studentId.toLowerCase().includes(searchText))) {
+            unregisteredUsers.push({
+              type: 'student',
+              name: `${student.firstName} ${student.familyName}`,
+              userId: student.studentId,
+              yearGroup: student.yearGroup,
+              classGrade: student.classGrade,
+              house: student.house,
+              createdAt: student.createdAt
+            });
+          }
+        });
+        
+        allTeachers.forEach(teacher => {
+          if ((userTypeFilter === '' || userTypeFilter === 'teacher') &&
+              !teacher.authorizedId &&
+              (searchText === '' || 
+               teacher.firstName.toLowerCase().includes(searchText) ||
+               teacher.familyName.toLowerCase().includes(searchText) ||
+               teacher.teacherId.toLowerCase().includes(searchText))) {
+            unregisteredUsers.push({
+              type: 'teacher',
+              name: `${teacher.firstName} ${teacher.familyName}`,
+              userId: teacher.teacherId,
+              createdAt: teacher.createdAt
+            });
+          }
+        });
+        
+        if (unregisteredUsers.length === 0) {
+          html = '<div style="padding:20px;text-align:center;color:var(--text-2);">All users have IDs linked!</div>';
+        } else {
+          html = `<div style="font-size:0.9rem;"><strong>⚠️ ${unregisteredUsers.length} User(s) need to add ID</strong></div>`;
+          unregisteredUsers.forEach(user => {
+            const icon = user.type === 'student' ? '👤' : '👨‍🏫';
+            const details = user.type === 'student' ? 
+              `${user.classGrade ? '📚 ' + user.classGrade + ' ' : ''}${user.house ? '🏠 ' + user.house : ''}`.trim() :
+              '👨‍🏫 Teacher';
+            html += `<div style="padding:10px;margin-top:8px;background:var(--surface-2);border-radius:6px;border-left:3px solid #ff4444;">
+              <div style="font-weight:600;">❌ ${user.name}</div>
+              <div style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">${icon} ${details}</div>
+            </div>`;
+          });
+        }
+      }
+      
+      const contentDiv = document.getElementById('dashboardContent');
+      if (contentDiv) {
+        contentDiv.innerHTML = html;
+      }
     }
 
     function addSingleAuthorizedId() {
@@ -9936,6 +10261,8 @@ T001, teacher, Jane, Smith</code>
       html += `<div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">`;
       html += `<h3 style="margin-bottom:12px;font-size:1rem;">🔐 Authorized ID</h3>`;
       
+      const enforceIdToggle = getEnforceIdToggle();
+      
       if (student.authorizedId) {
         html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);margin-bottom:12px;">`;
         html += `<div style="font-weight:600;color:var(--accent);font-size:1.1rem;">${student.authorizedId}</div>`;
@@ -9948,7 +10275,12 @@ T001, teacher, Jane, Smith</code>
       } else {
         html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;margin-bottom:12px;">`;
         html += `<div style="color:#ff4444;font-weight:600;">⚠️ No Authorized ID linked</div>`;
-        html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Enter your authorized ID below to activate your account</div>`;
+        
+        if (enforceIdToggle) {
+          html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;"><strong>⚠️ ID Management is currently ON</strong> - You must add an ID to activate your account</div>`;
+        } else {
+          html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Enter your authorized ID below to activate your account</div>`;
+        }
         html += `</div>`;
       }
       
