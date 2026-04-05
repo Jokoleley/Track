@@ -3795,6 +3795,7 @@
       if (!change) return false;
 
       /* Apply the change */
+      const oldValue = student[change.field];
       student[change.field] = change.newValue;
       
       /* If class changed, update yearNumber, yearGroup, classLetter, keyStage */
@@ -3804,6 +3805,28 @@
         student.yearGroup = parseInt(classInfo.yearGroup);
         student.classLetter = classInfo.classLetter;
         student.keyStage = getKeyStage(classInfo.yearNum);
+      }
+
+      /* Special handling for authorizedId changes */
+      if (change.field === 'authorizedId') {
+        /* Unregister the old ID */
+        if (oldValue) {
+          const oldAuthRecord = sdkLoad('authorizedIds', oldValue.toUpperCase());
+          if (oldAuthRecord) {
+            oldAuthRecord.registered = false;
+            oldAuthRecord.linkedStudentId = null;
+            sdkSave('authorizedIds', oldValue.toUpperCase(), oldAuthRecord);
+          }
+        }
+        
+        /* Register the new ID */
+        const newAuthRecord = sdkLoad('authorizedIds', change.newValue.toUpperCase());
+        if (newAuthRecord) {
+          newAuthRecord.registered = true;
+          newAuthRecord.linkedStudentId = studentId;
+          newAuthRecord.lastAttempt = new Date().toISOString();
+          sdkSave('authorizedIds', change.newValue.toUpperCase(), newAuthRecord);
+        }
       }
 
       /* Mark change as approved */
@@ -9914,16 +9937,32 @@ T001, teacher, Jane, Smith</code>
       html += `<h3 style="margin-bottom:12px;font-size:1rem;">🔐 Authorized ID</h3>`;
       
       if (student.authorizedId) {
-        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);">`;
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--accent);margin-bottom:12px;">`;
         html += `<div style="font-weight:600;color:var(--accent);font-size:1.1rem;">${student.authorizedId}</div>`;
         html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">✅ Your account is authorized and active</div>`;
         html += `</div>`;
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff9500;">`;
+        html += `<div style="color:#ff9500;font-weight:600;font-size:0.95rem;">Want to change your ID?</div>`;
+        html += `<div style="color:var(--text-2);font-size:0.85rem;margin:8px 0 0 0;">Enter a new authorized ID below and request manager approval</div>`;
+        html += `</div>`;
       } else {
-        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;">`;
+        html += `<div style="padding:12px;background:var(--surface);border-radius:6px;border-left:3px solid #ff4444;margin-bottom:12px;">`;
         html += `<div style="color:#ff4444;font-weight:600;">⚠️ No Authorized ID linked</div>`;
-        html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Contact your House Team Manager to get an authorized ID</div>`;
+        html += `<div style="color:var(--text-2);font-size:0.85rem;margin-top:4px;">Enter your authorized ID below to activate your account</div>`;
         html += `</div>`;
       }
+      
+      <!-- ID Input Form -->
+      html += `<div class="form-group">`;
+      html += `<label for="settAuthorizedId">🔐 ${student.authorizedId ? 'New ' : ''}Authorized ID</label>`;
+      html += `<input type="text" id="settAuthorizedId" class="form-input" placeholder="Enter your authorized ID" style="text-transform:uppercase;">`;
+      html += `<div class="form-error" id="settAuthorizedIdErr" style="display:none;"></div>`;
+      const buttonText = student.authorizedId ? 'Request Change' : 'Link ID';
+      const buttonAction = student.authorizedId ? 
+        `requestAuthorizedIdChange('${studentId}', document.getElementById('settAuthorizedId').value)` :
+        `linkNewAuthorizedId('${studentId}', document.getElementById('settAuthorizedId').value)`;
+      html += `<button onclick="${buttonAction}" class="btn btn-primary" style="width:100%;margin-top:8px;">🔗 ${buttonText}</button>`;
+      html += `</div>`;
       
       html += `</div>`;
 
@@ -9958,7 +9997,8 @@ T001, teacher, Jane, Smith</code>
           const fieldNames = {
             'classGrade': '📚 Class',
             'yearGroup': '📅 Year Group',
-            'house': '🏠 House Team'
+            'house': '🏠 House Team',
+            'authorizedId': '🔐 Authorized ID'
           };
           html += `<div style="padding:8px;background:var(--surface);border-radius:6px;margin-bottom:8px;font-size:0.9rem;">`;
           html += `<div><strong>${fieldNames[change.field] || change.field}</strong></div>`;
@@ -10086,6 +10126,113 @@ T001, teacher, Jane, Smith</code>
       showToast(`✓ Change requested and awaiting manager approval`);
       renderStudentSettings(currentStudentId);
       updateActivityTimestamp(currentStudentId);
+    }
+
+    /* =============================================
+       AUTHORIZED ID MANAGEMENT FOR STUDENTS
+       ============================================= */
+    function linkNewAuthorizedId(studentId, idValue) {
+      const trimmedId = idValue.trim().toUpperCase();
+      const errorElement = document.getElementById('settAuthorizedIdErr');
+      
+      /* Clear previous error */
+      errorElement.style.display = 'none';
+      errorElement.textContent = '';
+      
+      if (!trimmedId) {
+        errorElement.textContent = '❌ Please enter an Authorized ID';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID exists in Authorized_IDs database */
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      if (!authorizedRecord) {
+        errorElement.textContent = '❌ ID not recognized. Please check for typos or contact your PE Teacher.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID is already registered by someone else */
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const isDuplicate = allStudents.some(s => s.authorizedId === trimmedId && s._id !== studentId) ||
+                          allTeachers.some(t => t.authorizedId === trimmedId);
+      
+      if (isDuplicate) {
+        errorElement.textContent = '❌ This ID is already used by another user.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* All validation passed - link the ID */
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+      
+      student.authorizedId = trimmedId;
+      sdkSave('students', studentId, student);
+      
+      /* Update the authorized record to mark as registered */
+      authorizedRecord.registered = true;
+      authorizedRecord.linkedStudentId = studentId;
+      authorizedRecord.lastAttempt = new Date().toISOString();
+      sdkSave('authorizedIds', trimmedId, authorizedRecord);
+      
+      showToast(`✅ Authorized ID linked successfully!`);
+      updateActivityTimestamp(studentId);
+      renderStudentSettings(studentId);
+    }
+
+    function requestAuthorizedIdChange(studentId, newIdValue) {
+      const trimmedId = newIdValue.trim().toUpperCase();
+      const errorElement = document.getElementById('settAuthorizedIdErr');
+      
+      /* Clear previous error */
+      errorElement.style.display = 'none';
+      errorElement.textContent = '';
+      
+      if (!trimmedId) {
+        errorElement.textContent = '❌ Please enter an Authorized ID';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      const student = sdkLoad('students', studentId);
+      if (!student) return;
+      
+      /* Check if trying to request the same ID */
+      if (student.authorizedId === trimmedId) {
+        errorElement.textContent = '❌ This is your current ID. No change to request.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID exists in Authorized_IDs database */
+      const authorizedRecord = sdkLoad('authorizedIds', trimmedId);
+      if (!authorizedRecord) {
+        errorElement.textContent = '❌ ID not recognized. Please check for typos or contact your PE Teacher.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* Check if ID is already registered by someone else */
+      const allStudents = sdkLoadAll('students') || [];
+      const allTeachers = sdkLoadAll('teachers') || [];
+      const isDuplicate = allStudents.some(s => s.authorizedId === trimmedId && s._id !== studentId) ||
+                          allTeachers.some(t => t.authorizedId === trimmedId);
+      
+      if (isDuplicate) {
+        errorElement.textContent = '❌ This ID is already used by another user.';
+        errorElement.style.display = 'block';
+        return;
+      }
+      
+      /* All validation passed - request the change */
+      const oldId = student.authorizedId;
+      requestSettingChange(studentId, 'authorizedId', trimmedId, oldId);
+      showToast(`✓ ID change requested and awaiting manager approval`);
+      updateActivityTimestamp(studentId);
+      renderStudentSettings(studentId);
     }
 
     /* =============================================
