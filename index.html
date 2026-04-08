@@ -300,6 +300,65 @@
       color: var(--text);
     }
 
+    /* =============================================
+       ADMIN TABS - HORIZONTAL TAB NAVIGATION
+       ============================================= */
+    .admin-tabs-container {
+      width: 100%;
+    }
+
+    .admin-tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .admin-tab {
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-2);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      bottom: -2px;
+    }
+
+    .admin-tab:hover {
+      color: var(--text);
+      background: var(--surface-2);
+      border-bottom-color: var(--theme-accent-info);
+    }
+
+    .admin-tab.active {
+      color: var(--theme-accent-cta);
+      border-bottom-color: var(--theme-accent-cta);
+      background: transparent;
+    }
+
+    .admin-tabs-content {
+      width: 100%;
+    }
+
+    .admin-tab-pane {
+      display: none;
+      animation: fadeIn var(--transition);
+    }
+
+    .admin-tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     .admin-controls {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -3090,9 +3149,7 @@
       <button class="nav-item" data-section="approvals">✅ Approvals</button>
       <button class="nav-item" data-section="wellDone">🏅 Well Done!</button>
       <button class="nav-item" data-section="settings">⚙️ Settings</button>
-      <button class="nav-item admin-nav-item" data-section="seasonManagement">📅 Season Management</button>
-      <button class="nav-item admin-nav-item" data-section="userManagement">👥 User Management</button>
-      <button class="nav-item admin-nav-item" data-section="idManagement">🔐 ID Management</button>
+      <button class="nav-item admin-nav-item" data-section="adminManagement">⚙️ Admin Management</button>
     </nav>
     <div class="app-body teacher-body">
       <div class="teacher-section active" id="tSectionClassOverview"></div>
@@ -3102,9 +3159,20 @@
       <div class="teacher-section" id="tSectionApprovals"></div>
       <div class="teacher-section" id="tSectionWellDone"></div>
       <div class="teacher-section" id="tSectionSettings"></div>
-      <div class="teacher-section admin-section" id="tSectionSeasonManagement"></div>
-      <div class="teacher-section admin-section" id="tSectionUserManagement"></div>
-      <div class="teacher-section admin-section" id="tSectionIdManagement"></div>
+      <div class="teacher-section admin-section" id="tSectionAdminManagement">
+        <div class="admin-tabs-container">
+          <div class="admin-tabs-header">
+            <button class="admin-tab active" data-admin-tab="seasonManagement">📅 Season Management</button>
+            <button class="admin-tab" data-admin-tab="userManagement">👥 User Management</button>
+            <button class="admin-tab" data-admin-tab="idManagement">🔐 ID Management</button>
+          </div>
+          <div class="admin-tabs-content">
+            <div class="admin-tab-pane active" id="adminTabSeasonManagement"></div>
+            <div class="admin-tab-pane" id="adminTabUserManagement"></div>
+            <div class="admin-tab-pane" id="adminTabIdManagement"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4873,6 +4941,7 @@
         document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.add('visible'));
         renderSeasonManagementPanel();
         renderUserManagementPanel();
+        renderIdManagementPanel();
       } else {
         document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.remove('visible'));
       }
@@ -4910,16 +4979,38 @@
         document.getElementById('tSectionSettings').classList.add('active');
         renderTeacherSettings();
       }
-      else if (section === 'seasonManagement') {
-        document.getElementById('tSectionSeasonManagement').classList.add('active');
+      else if (section === 'adminManagement') {
+        document.getElementById('tSectionAdminManagement').classList.add('active');
+        // Set first tab as active by default
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.admin-tab[data-admin-tab="seasonManagement"]').classList.add('active');
+        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById('adminTabSeasonManagement').classList.add('active');
         renderSeasonManagementPanel();
       }
-      else if (section === 'userManagement') {
-        document.getElementById('tSectionUserManagement').classList.add('active');
+    });
+
+    /* =============================================
+       ADMIN TABS HANDLER
+       ============================================= */
+    document.addEventListener('click', function(e) {
+      const tab = e.target.closest('.admin-tab');
+      if (!tab) return;
+      const adminTab = tab.getAttribute('data-admin-tab');
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('active'));
+      
+      if (adminTab === 'seasonManagement') {
+        document.getElementById('adminTabSeasonManagement').classList.add('active');
+        renderSeasonManagementPanel();
+      }
+      else if (adminTab === 'userManagement') {
+        document.getElementById('adminTabUserManagement').classList.add('active');
         renderUserManagementPanel();
       }
-      else if (section === 'idManagement') {
-        document.getElementById('tSectionIdManagement').classList.add('active');
+      else if (adminTab === 'idManagement') {
+        document.getElementById('adminTabIdManagement').classList.add('active');
         renderIdManagementPanel();
       }
     });
@@ -6511,7 +6602,7 @@
        ADMIN RENDER: SEASON MANAGEMENT
        ============================================= */
     function renderSeasonManagementPanel() {
-      const container = document.getElementById('tSectionSeasonManagement');
+      const container = document.getElementById('adminTabSeasonManagement');
       const currentTeacher = sdkLoad('teachers', currentTeacherId);
       
       if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
@@ -6633,7 +6724,7 @@
        ADMIN RENDER: USER MANAGEMENT
        ============================================= */
     function renderUserManagementPanel() {
-      const container = document.getElementById('tSectionUserManagement');
+      const container = document.getElementById('adminTabUserManagement');
       const currentTeacher = sdkLoad('teachers', currentTeacherId);
       
       if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
@@ -9478,7 +9569,7 @@
        ADMIN RENDER: ID MANAGEMENT DASHBOARD
        ============================================= */
     function renderIdManagementPanel() {
-      const container = document.getElementById('tSectionIdManagement');
+      const container = document.getElementById('adminTabIdManagement');
       const currentTeacher = sdkLoad('teachers', currentTeacherId);
       
       if (!currentTeacher || !currentTeacher.isHouseTeamManager) {
